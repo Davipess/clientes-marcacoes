@@ -1,0 +1,44 @@
+
+> salao-app@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://26.47.38.10:3000
+- Environments: .env
+✓ Ready in 807ms
+✓ Running next.config.ts took 56ms
+
+ GET /entrar 200 in 2.2s (next.js: 1991ms, application-code: 194ms)
+ POST /api/auth/login 403 in 762ms (next.js: 587ms, application-code: 175ms)
+(node:10512) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ POST /api/auth/login 401 in 1620ms (next.js: 5ms, application-code: 1614ms)
+ POST /api/auth/login 401 in 69ms (next.js: 5ms, application-code: 64ms)
+ POST /api/auth/login 200 in 395ms (next.js: 5ms, application-code: 390ms)
+ GET /admin 200 in 1029ms (next.js: 571ms, application-code: 458ms)
+ GET /admin 307 in 59ms (next.js: 6ms, application-code: 52ms)
+ GET /staff 307 in 320ms (next.js: 182ms, application-code: 137ms)
+ POST /api/auth/setup 409 in 270ms (next.js: 223ms, application-code: 48ms)
+ GET /staff 307 in 340ms (next.js: 14ms, application-code: 327ms)
+ GET /staff 307 in 62ms (next.js: 5ms, application-code: 57ms)
+ POST /api/auth/logout 200 in 243ms (next.js: 194ms, application-code: 50ms)
+ GET /admin 307 in 97ms (next.js: 33ms, application-code: 64ms)
+ POST /api/auth/login 200 in 356ms (next.js: 4ms, application-code: 352ms)
+ GET /staff 307 in 165ms (next.js: 30ms, application-code: 135ms)
+[recuperar-palavra-passe] Link para gestor@salaoexemplo.pt: http://localhost:3000/redefinir-palavra-passe?token=51IbRvwVoEhGpofrxN73W90lyB3l8RHEZ7PFXu24dmw
+ POST /api/auth/forgot-password 200 in 623ms (next.js: 211ms, application-code: 412ms)
+ POST /api/auth/reset-password 400 in 217ms (next.js: 198ms, application-code: 19ms)
+ POST /api/auth/reset-password 400 in 11ms (next.js: 4ms, application-code: 8ms)
+ POST /api/auth/login 200 in 305ms (next.js: 3ms, application-code: 302ms)
+ POST /api/auth/login 401 in 58ms (next.js: 3ms, application-code: 55ms)
+ POST /api/auth/reset-password 200 in 551ms (next.js: 5ms, application-code: 546ms)
+ POST /api/auth/login 401 in 365ms (next.js: 4ms, application-code: 361ms)
+ POST /api/auth/login 200 in 128ms (next.js: 5ms, application-code: 123ms)

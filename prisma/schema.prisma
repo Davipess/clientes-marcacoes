@@ -75,9 +75,13 @@ model User {
   role         Role    @default(CLIENT)
   name         String
   email        String
-  passwordHash String? // null = guest client without account
+  passwordHash String? // null = guest client without account (clients never have passwords)
   phone        String?
   image        String?
+
+  passwordResetTokenHash String? // SHA-256 of the reset token; raw token only ever emailed
+  passwordResetExpiresAt DateTime?
+  twoFactorSecretEnc     String? // AES-256-GCM encrypted TOTP secret (optional, future hardening)
 
   staffProfile  Staff?
   clientProfile Client?
@@ -198,8 +202,12 @@ model Client {
   userId           String?   @unique // set if they created an account
   user             User?     @relation(fields: [userId], references: [id])
   name             String
-  phone            String
-  email            String?
+  // PII stored encrypted at rest (AES-256-GCM, key only in app env).
+  phoneEnc         String
+  emailEnc         String?
+  // Deterministic HMAC-SHA256 for exact-match lookups/dedupe without decrypting.
+  phoneHash        String
+  emailHash        String?
   notes            String? // admin-only internal notes
   marketingConsent Boolean   @default(false)
   gdprConsentAt    DateTime?
@@ -207,7 +215,7 @@ model Client {
   appointments Appointment[]
   reviews      Review[]
 
-  @@unique([businessId, phone]) // dedupe guests by phone per business
+  @@unique([businessId, phoneHash]) // dedupe guests by phone per business
   @@map("clients")
 }
 
