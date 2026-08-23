@@ -58,7 +58,6 @@ async function main() {
   console.log("4. disponibilidade com so a gestora:", avail.days.length, "dias com slots");
 
   // 5. Cannot deactivate the last active technician.
-  const own = list.staff.find((s: { isOwnProfile?: boolean }) => false) ?? null;
   const adminStaff = await prisma.staff.findFirstOrThrow({
     where: { user: { email: "gestor@salaoexemplo.pt" } },
   });
@@ -78,7 +77,6 @@ async function main() {
     });
     console.log("6. Ana reativada (decisao fica para a gestora)");
   }
-  void own;
 }
 
 main()
