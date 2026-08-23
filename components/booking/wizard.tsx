@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -78,6 +78,13 @@ export function BookingWizard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ id: string; when: string } | null>(null);
+  const [clientDetails, setClientDetails] = useState<{
+    nome: string;
+    email: string;
+    notas: string;
+    marketing: boolean;
+  } | null>(null);
+  const [searchingFar, setSearchingFar] = useState(false);
 
   const allServices = useMemo(
     () => categories.flatMap((c) => c.services),
@@ -87,11 +94,11 @@ export function BookingWizard({
   const totalMin = selected.reduce((sum, s) => sum + s.durationMin, 0);
   const totalPrice = selected.reduce((sum, s) => sum + s.price, 0);
 
-  // Next 14 days strip.
-  const days = useMemo(() => {
+  // Next 14 days strip (extends automatically when a far date is selected).
+  const buildDays = (count: number) => {
     const out: { iso: string; weekday: number; dayNum: number; month: string }[] = [];
     const now = new Date();
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < count; i++) {
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
       out.push({
         iso: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
@@ -101,7 +108,9 @@ export function BookingWizard({
       });
     }
     return out;
-  }, []);
+  };
+  const [stripDays, setStripDays] = useState(() => buildDays(14));
+  const days = stripDays;
 
   async function fetchSlots() {
     setLoadingSlots(true);
@@ -125,8 +134,72 @@ export function BookingWizard({
   }
 
   function goToStep(next: number) {
+    // Leaving the details step: capture + validate the form values first.
+    if (step === 3 && next === 4) {
+      const form = document.getElementById("dados-form") as HTMLFormElement | null;
+      if (!form) return;
+      if (!form.reportValidity()) return;
+      const data = new FormData(form);
+      if (data.get("rgpd") !== "on") {
+        setError("É necessário aceitar a Política de Privacidade.");
+        return;
+      }
+      setClientDetails({
+        nome: String(data.get("nome") ?? ""),
+        email: String(data.get("email") ?? ""),
+        notas: String(data.get("notas") ?? ""),
+        marketing: data.get("marketing") === "on",
+      });
+      setError(null);
+    }
     setStep(next);
     if (next === 2) void fetchSlots();
+  }
+
+  // Search up to 30 days ahead and jump to the first day with openings.
+  async function findFirstAvailable() {
+    setSearchingFar(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      selectedIds.forEach((id) => params.append("servico", id));
+      if (staffId) params.set("colaborador", staffId);
+      params.set("dias", "30");
+      const res = await fetch(`/api/disponibilidade?${params}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Erro ao procurar.");
+      const first: { date: string; times: string[] } | undefined = json.days[0];
+      if (!first) {
+        setError("Sem horários nos próximos 30 dias. Contacte-nos, por favor.");
+        return;
+      }
+      // Extend the visible strip if the first opening is beyond it.
+      setStripDays((prev) => {
+        if (prev.some((d) => d.iso === first.date)) return prev;
+        const last = new Date(prev[prev.length - 1].iso);
+        const target = new Date(first.date);
+        const extra: typeof prev = [];
+        for (let d = new Date(last); d < target; d.setDate(d.getDate() + 1)) {
+          const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          if (!prev.some((p) => p.iso === iso)) {
+            extra.push({
+              iso,
+              weekday: d.getDay(),
+              dayNum: d.getDate(),
+              month: d.toLocaleDateString("pt-PT", { month: "short" }),
+            });
+          }
+        }
+        return [...prev, ...extra];
+      });
+      setSlotsByDay((prev) => ({ ...prev, [first.date]: first.times }));
+      setDateStr(first.date);
+      setTimeStr(first.times[0]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao procurar.");
+    } finally {
+      setSearchingFar(false);
+    }
   }
 
   function toggleService(id: string) {
@@ -135,8 +208,8 @@ export function BookingWizard({
     );
   }
 
-  async function submit(formData: FormData) {
-    if (!dateStr || !timeStr) return;
+  async function submit() {
+    if (!dateStr || !timeStr || !clientDetails) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -147,11 +220,11 @@ export function BookingWizard({
           servicos: selectedIds,
           colaborador: staffId ?? undefined,
           inicio: wallTimeToUtcIso(dateStr, timeStr, timezone),
-          nome: formData.get("nome"),
-          email: formData.get("email"),
-          notas: formData.get("notas") || undefined,
-          consentimentoMarketing: formData.get("marketing") === "on",
-          consentimentoRGPD: formData.get("rgpd") === "on",
+          nome: clientDetails.nome,
+          email: clientDetails.email,
+          notas: clientDetails.notas || undefined,
+          consentimentoMarketing: clientDetails.marketing,
+          consentimentoRGPD: true,
         }),
       });
       const json = await res.json();
@@ -430,6 +503,20 @@ export function BookingWizard({
                   Sem horários neste dia. Experimente outro.
                 </p>
               )}
+              {!loadingSlots && (
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => void findFirstAvailable()}
+                    disabled={searchingFar}
+                    className="text-sm font-medium text-primary underline-offset-4 transition-colors hover:underline disabled:opacity-50"
+                  >
+                    {searchingFar
+                      ? "A procurar..."
+                      : "🔍 Ver a primeira data disponível (30 dias)"}
+                  </button>
+                </div>
+              )}
               {error && <p className="py-4 text-center text-sm text-destructive">{error}</p>}
             </div>
           </section>
@@ -442,25 +529,25 @@ export function BookingWizard({
             <p className="mt-1 text-sm text-muted-foreground">
               Só o essencial para confirmar a sua marcação.
             </p>
-            <form id="dados-form" action={submit} className="mt-6 space-y-4">
+            <form id="dados-form" className="mt-6 space-y-4">
               <div>
                 <Label htmlFor="nome">Nome *</Label>
-                <Input id="nome" name="nome" required minLength={2} autoComplete="name" className="mt-1.5" />
+                <Input id="nome" name="nome" required minLength={2} autoComplete="name" defaultValue={clientDetails?.nome} className="mt-1.5" />
               </div>
               <div>
                 <Label htmlFor="email">Email *</Label>
-                <Input id="email" name="email" type="email" required autoComplete="email" className="mt-1.5" />
+                <Input id="email" name="email" type="email" required autoComplete="email" defaultValue={clientDetails?.email} className="mt-1.5" />
                 <p className="mt-1 text-xs text-muted-foreground">
                   Para receber a confirmação e o lembrete da marcação.
                 </p>
               </div>
               <div>
                 <Label htmlFor="notas">Notas (opcional)</Label>
-                <Textarea id="notas" name="notas" rows={2} maxLength={500} className="mt-1.5" />
+                <Textarea id="notas" name="notas" rows={2} maxLength={500} defaultValue={clientDetails?.notas} className="mt-1.5" />
               </div>
               <div className="space-y-2 rounded-2xl bg-muted/60 p-4">
                 <label className="flex items-start gap-2.5 text-sm">
-                  <input type="checkbox" name="rgpd" required className="mt-0.5 h-4 w-4 accent-[var(--primary)]" />
+                  <input type="checkbox" name="rgpd" required defaultChecked={Boolean(clientDetails)} className="mt-0.5 h-4 w-4 accent-[var(--primary)]" />
                   <span>
                     Li e aceito a{" "}
                     <a href="/privacidade" target="_blank" className="underline underline-offset-2">
@@ -470,7 +557,7 @@ export function BookingWizard({
                   </span>
                 </label>
                 <label className="flex items-start gap-2.5 text-sm">
-                  <input type="checkbox" name="marketing" className="mt-0.5 h-4 w-4 accent-[var(--primary)]" />
+                  <input type="checkbox" name="marketing" defaultChecked={clientDetails?.marketing ?? false} className="mt-0.5 h-4 w-4 accent-[var(--primary)]" />
                   <span className="text-muted-foreground">
                     Quero receber novidades e promoções (opcional)
                   </span>
@@ -552,9 +639,9 @@ export function BookingWizard({
               </Button>
             ) : (
               <Button
-                type="submit"
-                form="dados-form"
-                disabled={submitting}
+                type="button"
+                disabled={submitting || !clientDetails}
+                onClick={() => void submit()}
                 className="rounded-full px-7"
               >
                 {submitting ? "A marcar..." : "Confirmar marcação"}

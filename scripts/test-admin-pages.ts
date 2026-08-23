@@ -1,5 +1,4 @@
 import "dotenv/config";
-import { prisma } from "../lib/db";
 
 const BASE = "http://localhost:3000";
 const ORIGIN = { Origin: BASE };

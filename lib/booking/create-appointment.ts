@@ -8,6 +8,9 @@ export type CreateBookingInput = {
   serviceIds: string[];
   staffId?: string;
   startAt: Date; // UTC instant chosen by the client from /api/disponibilidade
+  source?: "ONLINE" | "ADMIN" | "STAFF";
+  /** Admin manual bookings may bypass the minimum lead time. */
+  bypassLeadTime?: boolean;
   client: {
     name: string;
     email: string;
@@ -120,7 +123,9 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
         const blockEndWall = startWall + totalDurationMin;
 
         // Lead-time validation.
-        const minStartUtc = new Date(Date.now() + settings.minLeadHours * 3_600_000);
+        const minStartUtc = input.bypassLeadTime
+          ? new Date(0)
+          : new Date(Date.now() + settings.minLeadHours * 3_600_000);
         const maxEndUtc = new Date(
           zonedMidnight(day.year, day.month, day.day, tz).getTime() +
             (settings.maxLeadDays + 1) * 86_400_000,
@@ -277,7 +282,7 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
             startAt: input.startAt,
             endAt,
             status: "CONFIRMED",
-            source: "ONLINE",
+            source: input.source ?? "ONLINE",
             notes: input.client.notes ?? null,
             items: {
               create: services.map((service, index) => ({
