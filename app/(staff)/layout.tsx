@@ -9,9 +9,9 @@ export default async function StaffLayout({
 }) {
   const user = await getAuthUser();
 
-  if (!user) redirect("/entrar");
-  if (user.role !== Role.STAFF) {
-    redirect(user.role === Role.ADMIN ? "/admin" : "/");
+  // ADMIN may enter the staff area (solo mode: owner is the technician).
+  if (!user || (user.role !== Role.STAFF && user.role !== Role.ADMIN)) {
+    redirect(user ? "/" : "/entrar");
   }
 
   return (

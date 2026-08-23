@@ -42,3 +42,4 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
  POST /api/auth/reset-password 200 in 551ms (next.js: 5ms, application-code: 546ms)
  POST /api/auth/login 401 in 365ms (next.js: 4ms, application-code: 361ms)
  POST /api/auth/login 200 in 128ms (next.js: 5ms, application-code: 123ms)
+  Reload env: .env
