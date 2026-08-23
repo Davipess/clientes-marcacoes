@@ -34,7 +34,16 @@ export function SettingsForm({
     cancellationWindowHours: number;
     cancellationPolicyText: string;
   };
-  soloMode: { hasOwnProfile: boolean; staffCount: number };
+  soloMode: {
+    hasOwnProfile: boolean;
+    staff: {
+      id: string;
+      displayName: string;
+      email: string | null;
+      active: boolean;
+      isOwnProfile: boolean;
+    }[];
+  };
 }) {
   const router = useRouter();
   const [hours, setHours] = useState<Hours>(openingHours);
@@ -42,7 +51,7 @@ export function SettingsForm({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activatingSolo, setActivatingSolo] = useState(false);
-  const [soloDone, setSoloDone] = useState(soloMode.hasOwnProfile);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   function setDay(day: string, closed: boolean, open?: string, close?: string) {
     setHours((prev) => ({
@@ -85,6 +94,28 @@ export function SettingsForm({
     }
   }
 
+  async function toggleStaff(staffId: string, active: boolean) {
+    setTogglingId(staffId);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/equipa", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staffId, active }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Erro ao alterar a técnica.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Erro de rede.");
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
   async function activateSoloMode() {
     setActivatingSolo(true);
     setError(null);
@@ -95,7 +126,6 @@ export function SettingsForm({
         setError(json.error ?? "Erro ao ativar o modo individual.");
         return;
       }
-      setSoloDone(true);
       router.refresh();
     } catch {
       setError("Erro de rede.");
@@ -106,8 +136,8 @@ export function SettingsForm({
 
   return (
     <form action={submit} className="mt-6 space-y-8">
-      {/* Solo mode */}
-      {!soloDone && (
+      {/* Solo mode / team */}
+      {soloMode.staff.length === 0 && (
         <section className="rounded-2xl border border-primary/30 bg-secondary/40 p-5">
           <h2 className="font-heading text-lg font-semibold">Modo individual</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -125,13 +155,56 @@ export function SettingsForm({
           </Button>
         </section>
       )}
-      {soloDone && soloMode.staffCount <= 1 && (
+      {soloMode.staff.length > 0 && (
         <section className="rounded-2xl border border-border/70 bg-card p-5">
-          <h2 className="font-heading text-lg font-semibold">Modo individual</h2>
+          <h2 className="font-heading text-lg font-semibold">Equipa</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Ativo — recebe marcações como única técnica. Os serviços novos são
-            associados automaticamente a si.
+            Só as técnicas ativas recebem marcações. Desative quem não trabalha
+            consigo para que apenas apareça a si no site.
           </p>
+          <ul className="mt-4 space-y-2">
+            {soloMode.staff.map((member) => (
+              <li
+                key={member.id}
+                className="flex items-center justify-between gap-3 rounded-xl border border-border/60 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">
+                    {member.displayName}
+                    {member.isOwnProfile && (
+                      <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">
+                        você
+                      </span>
+                    )}
+                    {!member.active && (
+                      <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        inativa
+                      </span>
+                    )}
+                  </p>
+                  {member.email && (
+                    <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={`rounded-full ${
+                    member.active ? "" : "border-primary/40 text-primary"
+                  }`}
+                  disabled={togglingId === member.id}
+                  onClick={() => toggleStaff(member.id, !member.active)}
+                >
+                  {togglingId === member.id
+                    ? "..."
+                    : member.active
+                      ? "Desativar"
+                      : "Reativar"}
+                </Button>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
       {/* Business info */}

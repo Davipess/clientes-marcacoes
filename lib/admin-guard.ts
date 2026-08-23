@@ -5,9 +5,10 @@ export type AdminGuardResult =
   | { ok: true; businessId: string; userId: string }
   | { ok: false; response: Response };
 
-/** Guard for /api/admin/* routes: same-origin + ADMIN session. */
+/** Guard for /api/admin/* routes: ADMIN session (+ same-origin for mutations). */
 export async function requireAdmin(request: Request): Promise<AdminGuardResult> {
-  if (!isSameOrigin(request)) {
+  const mutating = !["GET", "HEAD", "OPTIONS"].includes(request.method);
+  if (mutating && !isSameOrigin(request)) {
     return {
       ok: false,
       response: Response.json({ error: "Pedido inválido" }, { status: 403 }),

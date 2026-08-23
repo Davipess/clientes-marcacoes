@@ -64,7 +64,7 @@ export default async function AdminAgendaPage({
     }),
     prisma.service.findMany({
       where: { businessId: user.businessId, archived: false },
-      select: { id: true, name: true, durationMin: true, price: true },
+      select: { id: true, name: true, durationMin: true },
       orderBy: { name: "asc" },
     }),
   ]);

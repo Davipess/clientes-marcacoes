@@ -17,8 +17,16 @@ export default async function AdminDefinicoesPage() {
   const ownStaffProfile = await prisma.staff.findFirst({
     where: { businessId: user.businessId, userId: user.id },
   });
-  const staffCount = await prisma.staff.count({
-    where: { businessId: user.businessId, active: true },
+  const staff = await prisma.staff.findMany({
+    where: { businessId: user.businessId },
+    select: {
+      id: true,
+      displayName: true,
+      active: true,
+      userId: true,
+      user: { select: { email: true } },
+    },
+    orderBy: { displayName: "asc" },
   });
 
   const defaultHours: Record<string, { open: string; close: string }[] | null> = {
@@ -60,7 +68,13 @@ export default async function AdminDefinicoesPage() {
         }}
         soloMode={{
           hasOwnProfile: Boolean(ownStaffProfile),
-          staffCount,
+          staff: staff.map((s) => ({
+            id: s.id,
+            displayName: s.displayName,
+            email: s.user?.email ?? null,
+            active: s.active,
+            isOwnProfile: s.userId === user.id,
+          })),
         }}
       />
     </div>
