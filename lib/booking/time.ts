@@ -131,7 +131,6 @@ export function utcIntervalToWallMinutes(
     0,
     timeZone,
   );
-  const DAY_MS = 86_400_000;
 
   const s = Math.max(
     0,

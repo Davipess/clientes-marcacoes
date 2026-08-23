@@ -1,69 +1,173 @@
-import Image from "next/image";
+import Link from "next/link";
+import { getPublicData } from "@/lib/public-data";
+import { Reveal } from "@/components/site/reveal";
+import { formatEuros } from "@/lib/format";
 
-export default function Home() {
+export default async function HomePage() {
+  const data = await getPublicData();
+  if (!data) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-24 text-center">
+        <h1 className="font-heading text-3xl font-semibold">Brevemente</h1>
+        <p className="mt-3 text-muted-foreground">
+          O salão está a preparar as suas marcações online.
+        </p>
+      </div>
+    );
+  }
+
+  const featured = data.categories
+    .flatMap((c) => c.services)
+    .slice(0, 4);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-b from-accent/70 via-background to-background"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+        <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-20 text-center sm:pb-28 sm:pt-28">
+          <span className="animate-fade-in rounded-full border border-primary/25 bg-card px-4 py-1 text-xs font-medium tracking-wide text-primary">
+            Marcações online, sem chamadas
+          </span>
+          <h1 className="animate-rise-in mt-6 max-w-2xl font-heading text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl [animation-delay:100ms]">
+            As suas unhas,
+            <br />
+            <span className="text-primary">ao seu tempo.</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="animate-rise-in mt-5 max-w-xl text-base text-muted-foreground sm:text-lg [animation-delay:200ms]">
+            Escolha os seus serviços, o melhor horário e confirme em menos de
+            um minuto. Simples, rápido e sem esperas.
           </p>
+          <div className="animate-rise-in mt-8 flex flex-col gap-3 [animation-delay:300ms] sm:flex-row">
+            <Link
+              href="/marcar"
+              className="rounded-full bg-primary px-8 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 hover:shadow-primary/30 active:scale-[0.98]"
+            >
+              Marcar agora
+            </Link>
+            <Link
+              href="/servicos"
+              className="rounded-full border border-border bg-card px-8 py-3.5 text-base font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary active:scale-[0.98]"
+            >
+              Ver serviços
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Featured services */}
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <Reveal>
+          <h2 className="reveal font-heading text-2xl font-semibold sm:text-3xl">
+            Serviços populares
+          </h2>
+          <p className="reveal mt-2 text-muted-foreground [animation-delay:80ms]">
+            Os favoritos das nossas clientes.
+          </p>
+        </Reveal>
+        <Reveal className="stagger mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {featured.map((service) => (
+            <Link
+              key={service.id}
+              href={`/marcar?servico=${service.id}`}
+              className="group reveal rounded-2xl border border-border/70 bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+            >
+              <div
+                aria-hidden
+                className="mb-4 h-28 rounded-xl bg-gradient-to-br from-secondary via-accent to-secondary"
+              />
+              <h3 className="font-medium group-hover:text-primary">{service.name}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {service.durationMin} min · {formatEuros(service.price)}
+              </p>
+            </Link>
+          ))}
+        </Reveal>
+      </section>
+
+      {/* About / trust */}
+      <section className="border-y border-border/60 bg-card/60">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <Reveal className="grid gap-10 sm:grid-cols-3">
+            {[
+              {
+                title: "Profissionalismo",
+                text: "Técnicas atualizadas e produtos de qualidade, num ambiente acolhedor.",
+              },
+              {
+                title: "À sua medida",
+                text: "Combine vários serviços numa só visita — manicure e pedicure juntas.",
+              },
+              {
+                title: "Sem complicações",
+                text: "Marcação online em segundos. Confirmação imediata por email.",
+              },
+            ].map((item) => (
+              <div key={item.title} className="reveal">
+                <h3 className="font-heading text-lg font-semibold text-primary">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </Reveal>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Location */}
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <Reveal>
+          <h2 className="reveal font-heading text-2xl font-semibold sm:text-3xl">
+            Onde nos encontra
+          </h2>
+          <div className="reveal mt-6 flex flex-col justify-between gap-6 rounded-2xl border border-border/70 bg-card p-6 sm:flex-row sm:items-center [animation-delay:120ms]">
+            <div>
+              <p className="text-lg font-medium">{data.business.name}</p>
+              {data.business.address && (
+                <p className="mt-1 text-sm text-muted-foreground">{data.business.address}</p>
+              )}
+              {data.business.phone && (
+                <p className="mt-1 text-sm text-muted-foreground">{data.business.phone}</p>
+              )}
+            </div>
+            {data.business.address && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.business.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-fit items-center rounded-full border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                Abrir no Google Maps ↗
+              </a>
+            )}
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Final CTA */}
+      <section className="mx-auto max-w-6xl px-4 pb-24">
+        <Reveal>
+          <div className="reveal rounded-3xl bg-gradient-to-br from-primary to-primary/80 px-6 py-14 text-center shadow-xl shadow-primary/15 sm:px-12">
+            <h2 className="font-heading text-2xl font-semibold text-primary-foreground sm:text-3xl">
+              Pronta para mimar-se?
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm text-primary-foreground/85 sm:text-base">
+              Reserve o seu momento. Pagamento efetuado no local.
+            </p>
+            <Link
+              href="/marcar"
+              className="mt-7 inline-block rounded-full bg-card px-8 py-3.5 font-medium text-foreground shadow-md transition-all hover:brightness-95 active:scale-[0.98]"
+            >
+              Marcar agora
+            </Link>
+          </div>
+        </Reveal>
+      </section>
+    </>
   );
 }

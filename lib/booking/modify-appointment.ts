@@ -160,7 +160,7 @@ async function validateSlotExcludingSelf(
   excludeAppointmentId: string,
   bufferMinutes: number,
   minLeadHours: number,
-  _maxLeadDays: number,
+  maxLeadDays: number,
 ): Promise<{ ok: boolean }> {
   const endAt = new Date(startAt.getTime() + durationMin * 60_000);
 
@@ -184,6 +184,9 @@ async function validateSlotExcludingSelf(
 
   if (!staff || staff.workSchedules.length === 0) return { ok: false };
   if (startAt.getTime() < Date.now() + minLeadHours * 3_600_000) {
+    return { ok: false };
+  }
+  if (startAt.getTime() > Date.now() + maxLeadDays * 86_400_000) {
     return { ok: false };
   }
 
