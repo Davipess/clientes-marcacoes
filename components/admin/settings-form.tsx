@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ export function SettingsForm({
   business,
   openingHours,
   settings,
+  soloMode,
 }: {
   business: { name: string; address: string; email: string };
   openingHours: Hours;
@@ -32,11 +34,15 @@ export function SettingsForm({
     cancellationWindowHours: number;
     cancellationPolicyText: string;
   };
+  soloMode: { hasOwnProfile: boolean; staffCount: number };
 }) {
+  const router = useRouter();
   const [hours, setHours] = useState<Hours>(openingHours);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activatingSolo, setActivatingSolo] = useState(false);
+  const [soloDone, setSoloDone] = useState(soloMode.hasOwnProfile);
 
   function setDay(day: string, closed: boolean, open?: string, close?: string) {
     setHours((prev) => ({
@@ -79,8 +85,55 @@ export function SettingsForm({
     }
   }
 
+  async function activateSoloMode() {
+    setActivatingSolo(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/equipa/solo", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Erro ao ativar o modo individual.");
+        return;
+      }
+      setSoloDone(true);
+      router.refresh();
+    } catch {
+      setError("Erro de rede.");
+    } finally {
+      setActivatingSolo(false);
+    }
+  }
+
   return (
     <form action={submit} className="mt-6 space-y-8">
+      {/* Solo mode */}
+      {!soloDone && (
+        <section className="rounded-2xl border border-primary/30 bg-secondary/40 p-5">
+          <h2 className="font-heading text-lg font-semibold">Modo individual</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            É a única técnica do salão? Ative o seu próprio perfil para passar a
+            receber marcações (horário padrão: seg–sáb, 09:00–18:00, ajustável
+            depois).
+          </p>
+          <Button
+            type="button"
+            onClick={activateSoloMode}
+            disabled={activatingSolo}
+            className="mt-3 rounded-full px-6"
+          >
+            {activatingSolo ? "A ativar..." : "Ativar o meu perfil de técnica"}
+          </Button>
+        </section>
+      )}
+      {soloDone && soloMode.staffCount <= 1 && (
+        <section className="rounded-2xl border border-border/70 bg-card p-5">
+          <h2 className="font-heading text-lg font-semibold">Modo individual</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ativo — recebe marcações como única técnica. Os serviços novos são
+            associados automaticamente a si.
+          </p>
+        </section>
+      )}
       {/* Business info */}
       <section className="space-y-4 rounded-2xl border border-border/70 bg-card p-5">
         <h2 className="font-heading text-lg font-semibold">Negócio</h2>

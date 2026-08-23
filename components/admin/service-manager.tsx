@@ -140,8 +140,14 @@ export function ServiceManager({
     setNewCategoryName("");
   }
 
+  const [pendingArchive, setPendingArchive] = useState<string | null>(null);
+
   async function archive(service: ServiceItem) {
-    if (!confirm(`Arquivar "${service.name}"? O histórico de marcações é mantido.`)) return;
+    if (pendingArchive !== service.id) {
+      setPendingArchive(service.id);
+      return;
+    }
+    setPendingArchive(null);
     const result = await api("/api/admin/servicos", "DELETE", { id: service.id });
     if (!result) return;
     setServices((prev) => prev.filter((s) => s.id !== service.id));
@@ -203,10 +209,14 @@ export function ServiceManager({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-destructive hover:text-destructive"
+                    className={
+                      pendingArchive === service.id
+                        ? "bg-destructive text-white hover:bg-destructive"
+                        : "text-destructive hover:text-destructive"
+                    }
                     onClick={() => archive(service)}
                   >
-                    Arquivar
+                    {pendingArchive === service.id ? "Confirmar?" : "Arquivar"}
                   </Button>
                 </div>
               ))}

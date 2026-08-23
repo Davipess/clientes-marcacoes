@@ -53,6 +53,8 @@ export function AgendaView({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Two-step inline confirmation instead of window.confirm (more predictable).
+  const [pending, setPending] = useState<{ id: string; action: string } | null>(null);
 
   const pretty = new Date(`${date}T12:00:00Z`).toLocaleDateString("pt-PT", {
     weekday: "long",
@@ -61,12 +63,12 @@ export function AgendaView({
   });
 
   async function act(id: string, action: "COMPLETED" | "NO_SHOW" | "CANCEL") {
-    const messages: Record<string, string> = {
-      CANCEL: "Cancelar esta marcação?",
-      NO_SHOW: "Marcar como não compareceu?",
-      COMPLETED: "Marcar como concluída?",
-    };
-    if (!confirm(messages[action])) return;
+    // First click arms the button; second click executes.
+    if (!pending || pending.id !== id || pending.action !== action) {
+      setPending({ id, action });
+      return;
+    }
+    setPending(null);
     setBusyId(id);
     setError(null);
     try {
@@ -251,7 +253,9 @@ export function AgendaView({
                     disabled={busyId === appt.id}
                     onClick={() => act(appt.id, "COMPLETED")}
                   >
-                    ✓ Concluída
+                    {pending?.id === appt.id && pending.action === "COMPLETED"
+                      ? "Confirmar conclusão?"
+                      : "✓ Concluída"}
                   </Button>
                   <Button
                     type="button"
@@ -261,7 +265,9 @@ export function AgendaView({
                     disabled={busyId === appt.id}
                     onClick={() => act(appt.id, "NO_SHOW")}
                   >
-                    Não compareceu
+                    {pending?.id === appt.id && pending.action === "NO_SHOW"
+                      ? "Confirmar falta?"
+                      : "Não compareceu"}
                   </Button>
                   <Button
                     type="button"
@@ -271,7 +277,9 @@ export function AgendaView({
                     disabled={busyId === appt.id}
                     onClick={() => act(appt.id, "CANCEL")}
                   >
-                    Cancelar
+                    {pending?.id === appt.id && pending.action === "CANCEL"
+                      ? "Confirmar cancelamento?"
+                      : "Cancelar"}
                   </Button>
                 </div>
               )}

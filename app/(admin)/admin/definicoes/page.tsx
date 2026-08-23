@@ -14,6 +14,12 @@ export default async function AdminDefinicoesPage() {
     where: { id: user.businessId },
     include: { settings: true },
   });
+  const ownStaffProfile = await prisma.staff.findFirst({
+    where: { businessId: user.businessId, userId: user.id },
+  });
+  const staffCount = await prisma.staff.count({
+    where: { businessId: user.businessId, active: true },
+  });
 
   const defaultHours: Record<string, { open: string; close: string }[] | null> = {
     mon: [{ open: "09:00", close: "18:00" }],
@@ -51,6 +57,10 @@ export default async function AdminDefinicoesPage() {
             business.settings?.cancellationWindowHours ?? 24,
           cancellationPolicyText:
             business.settings?.cancellationPolicyText ?? "",
+        }}
+        soloMode={{
+          hasOwnProfile: Boolean(ownStaffProfile),
+          staffCount,
         }}
       />
     </div>

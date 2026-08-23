@@ -47,6 +47,19 @@ export async function POST(request: Request) {
     },
     select: { id: true },
   });
+
+  // New services must be bookable immediately: link every active staff member.
+  const activeStaff = await prisma.staff.findMany({
+    where: { businessId: guard.businessId, active: true },
+    select: { id: true },
+  });
+  if (activeStaff.length > 0) {
+    await prisma.serviceStaff.createMany({
+      data: activeStaff.map((s) => ({ serviceId: service.id, staffId: s.id })),
+      skipDuplicates: true,
+    });
+  }
+
   return Response.json({ ok: true, id: service.id }, { status: 201 });
 }
 
@@ -81,6 +94,21 @@ export async function PATCH(request: Request) {
       ...(imageUrl !== undefined ? { imageUrl } : {}),
     },
   });
+
+  // Re-activating an archived service: restore staff links so it is bookable.
+  if (rest.archived === false) {
+    const activeStaff = await prisma.staff.findMany({
+      where: { businessId: guard.businessId, active: true },
+      select: { id: true },
+    });
+    if (activeStaff.length > 0) {
+      await prisma.serviceStaff.createMany({
+        data: activeStaff.map((s) => ({ serviceId: id, staffId: s.id })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
   return Response.json({ ok: true });
 }
 
