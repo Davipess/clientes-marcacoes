@@ -10,8 +10,8 @@ export type CreateBookingInput = {
   startAt: Date; // UTC instant chosen by the client from /api/disponibilidade
   client: {
     name: string;
-    phone: string;
-    email?: string;
+    email: string;
+    phone?: string;
     notes?: string;
     marketingConsent?: boolean;
     gdprConsent: boolean;
@@ -229,22 +229,22 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
           };
         }
 
-        // ── Upsert client by normalized phone hash ─────────────
-        const phoneHash = piiLookupHash(normalizePhone(input.client.phone));
-        const emailHash = input.client.email
-          ? piiLookupHash(input.client.email.toLowerCase())
+        // ── Upsert client by email hash (primary contact) ──────
+        const emailHash = piiLookupHash(input.client.email.toLowerCase());
+        const phoneHash = input.client.phone
+          ? piiLookupHash(normalizePhone(input.client.phone))
           : null;
 
         const client = await tx.client.upsert({
           where: {
-            businessId_phoneHash: { businessId: business.id, phoneHash },
+            businessId_emailHash: { businessId: business.id, emailHash },
           },
           update: {
             name: input.client.name,
-            ...(emailHash
+            ...(phoneHash
               ? {
-                  emailEnc: encryptPii(input.client.email!),
-                  emailHash,
+                  phoneEnc: encryptPii(input.client.phone!),
+                  phoneHash,
                 }
               : {}),
             ...(input.client.gdprConsent ? { gdprConsentAt: new Date() } : {}),
@@ -255,12 +255,12 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
           create: {
             businessId: business.id,
             name: input.client.name,
-            phoneEnc: encryptPii(input.client.phone),
-            phoneHash,
-            ...(emailHash
+            emailEnc: encryptPii(input.client.email),
+            emailHash,
+            ...(phoneHash
               ? {
-                  emailEnc: encryptPii(input.client.email!),
-                  emailHash,
+                  phoneEnc: encryptPii(input.client.phone!),
+                  phoneHash,
                 }
               : {}),
             marketingConsent: input.client.marketingConsent ?? false,

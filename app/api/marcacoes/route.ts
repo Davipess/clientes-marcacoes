@@ -10,8 +10,12 @@ const bookingSchema = z.object({
   colaborador: z.string().optional(),
   inicio: z.string().datetime(),
   nome: z.string().trim().min(2).max(120),
-  telefone: z.string().trim().regex(/^[+\d][\d\s().-]{7,19}$/, "Telefone inválido"),
-  email: emailSchema.optional(),
+  email: emailSchema,
+  telefone: z
+    .string()
+    .trim()
+    .regex(/^[+\d][\d\s().-]{7,19}$/, "Telefone inválido")
+    .optional(),
   notas: z.string().trim().max(500).optional(),
   consentimentoMarketing: z.boolean().optional(),
   consentimentoRGPD: z.literal(true),
@@ -51,8 +55,8 @@ export async function POST(request: Request) {
     startAt: new Date(parsed.data.inicio),
     client: {
       name: parsed.data.nome,
-      phone: parsed.data.telefone,
       email: parsed.data.email,
+      phone: parsed.data.telefone,
       notes: parsed.data.notas,
       marketingConsent: parsed.data.consentimentoMarketing,
       gdprConsent: parsed.data.consentimentoRGPD,

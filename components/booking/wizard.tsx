@@ -148,8 +148,8 @@ export function BookingWizard({
           colaborador: staffId ?? undefined,
           inicio: wallTimeToUtcIso(dateStr, timeStr, timezone),
           nome: formData.get("nome"),
-          telefone: formData.get("telefone"),
-          email: formData.get("email") || undefined,
+          email: formData.get("email"),
+          telefone: formData.get("telefone") || undefined,
           notas: formData.get("notas") || undefined,
           consentimentoMarketing: formData.get("marketing") === "on",
           consentimentoRGPD: formData.get("rgpd") === "on",
@@ -449,23 +449,22 @@ export function BookingWizard({
                 <Input id="nome" name="nome" required minLength={2} autoComplete="name" className="mt-1.5" />
               </div>
               <div>
-                <Label htmlFor="telefone">Telefone *</Label>
+                <Label htmlFor="email">Email *</Label>
+                <Input id="email" name="email" type="email" required autoComplete="email" className="mt-1.5" />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Para receber a confirmação e o lembrete da marcação.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="telefone">Telefone (opcional)</Label>
                 <Input
                   id="telefone"
                   name="telefone"
                   type="tel"
-                  required
                   placeholder="+351 912 345 678"
                   autoComplete="tel"
                   className="mt-1.5"
                 />
-              </div>
-              <div>
-                <Label htmlFor="email">Email (opcional)</Label>
-                <Input id="email" name="email" type="email" autoComplete="email" className="mt-1.5" />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Para receber a confirmação da marcação.
-                </p>
               </div>
               <div>
                 <Label htmlFor="notas">Notas (opcional)</Label>

@@ -203,11 +203,11 @@ model Client {
   user             User?     @relation(fields: [userId], references: [id])
   name             String
   // PII stored encrypted at rest (AES-256-GCM, key only in app env).
-  phoneEnc         String
-  emailEnc         String?
-  // Deterministic HMAC-SHA256 for exact-match lookups/dedupe without decrypting.
-  phoneHash        String
-  emailHash        String?
+  // Email is the primary contact (notifications); phone is optional.
+  emailEnc         String
+  emailHash        String
+  phoneEnc         String?
+  phoneHash        String?
   notes            String? // admin-only internal notes
   marketingConsent Boolean   @default(false)
   gdprConsentAt    DateTime?
@@ -215,7 +215,7 @@ model Client {
   appointments Appointment[]
   reviews      Review[]
 
-  @@unique([businessId, phoneHash]) // dedupe guests by phone per business
+  @@unique([businessId, emailHash]) // dedupe by email per business
   @@map("clients")
 }
 
@@ -336,4 +336,15 @@ model Review {
   createdAt     DateTime    @default(now())
 
   @@map("reviews") // future phase — model reserved now
+}
+
+// Uploaded images stored as bytes (serverless-friendly, no external storage).
+model Image {
+  id        String   @id @default(cuid())
+  businessId String
+  mime      String
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@map("images")
 }
