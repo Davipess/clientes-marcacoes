@@ -1,0 +1,331 @@
+// Online booking platform — multi-business-ready schema
+// Single business for now; every business-scoped table carries businessId.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Tenancy ──────────────────────────────────────────────
+
+model Business {
+  id             String   @id @default(cuid())
+  slug           String   @unique // subdomain-ready for future multi-business
+  name           String
+  logoUrl        String?
+  primaryColor   String   @default("#C2185B")
+  secondaryColor String   @default("#F8BBD0")
+  address        String?
+  phone          String?
+  email          String?
+  timezone       String   @default("Europe/Lisbon")
+
+  settings         BusinessSettings?
+  users            User[]
+  serviceCategories ServiceCategory[]
+  services         Service[]
+  staff            Staff[]
+  clients          Client[]
+  appointments     Appointment[]
+  exceptions       AvailabilityException[]
+  notificationLogs NotificationLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("businesses")
+}
+
+model BusinessSettings {
+  id         String   @id @default(cuid())
+  businessId String   @unique
+  business   Business @relation(fields: [businessId], references: [id])
+
+  // Opening hours per weekday: JSON array of intervals per day,
+  // e.g. [{ "open": "09:00", "close": "18:00" }]; null = closed.
+  openingHours            Json
+  bufferMinutes           Int    @default(10) // gap between appointments
+  minLeadHours            Int    @default(2) // minimum notice to book
+  maxLeadDays             Int    @default(60) // maximum booking horizon
+  cancellationPolicyText  String @default("")
+  cancellationWindowHours Int    @default(24) // min hours before appt client may cancel/reschedule
+  reminderHoursBefore     Int    @default(24)
+  notificationEmailText   String? // custom text injected into emails
+
+  @@map("business_settings")
+}
+
+// ── Users & roles ────────────────────────────────────────
+
+enum Role {
+  PLATFORM_OWNER
+  ADMIN
+  STAFF
+  CLIENT
+}
+
+model User {
+  id           String  @id @default(cuid())
+  businessId   String? // null only for PLATFORM_OWNER
+  business     Business? @relation(fields: [businessId], references: [id])
+  role         Role    @default(CLIENT)
+  name         String
+  email        String
+  passwordHash String? // null = guest client without account
+  phone        String?
+  image        String?
+
+  staffProfile  Staff?
+  clientProfile Client?
+  sessions      Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, email])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+
+  @@map("sessions")
+}
+
+// ── Staff & schedule ─────────────────────────────────────
+
+model Staff {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+
+  displayName String
+  bio         String?
+  photoUrl    String?
+  active      Boolean  @default(true)
+
+  services     ServiceStaff[] // which services they perform
+  workSchedules WorkSchedule[] // weekly recurring hours
+  timeOff      TimeOff[] // vacations / days off
+  appointments Appointment[]
+  blocks       AvailabilityException[]
+
+  @@map("staff")
+}
+
+model WorkSchedule {
+  id        String @id @default(cuid())
+  staffId   String
+  staff     Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  weekday   Int // 0 = Sunday .. 6 = Saturday
+  startTime String // "09:00"
+  endTime   String // "18:00"
+
+  @@unique([staffId, weekday, startTime])
+  @@map("work_schedules")
+}
+
+model TimeOff {
+  id      String  @id @default(cuid())
+  staffId String
+  staff   Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  startAt DateTime
+  endAt   DateTime
+  reason  String?
+
+  @@map("time_off")
+}
+
+// ── Services ─────────────────────────────────────────────
+
+model ServiceCategory {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+  name       String
+  sortOrder  Int      @default(0)
+  archived   Boolean  @default(false)
+  services   Service[]
+
+  @@unique([businessId, name])
+  @@map("service_categories")
+}
+
+model Service {
+  id           String          @id @default(cuid())
+  businessId   String
+  business     Business        @relation(fields: [businessId], references: [id])
+  categoryId   String
+  category     ServiceCategory @relation(fields: [categoryId], references: [id])
+  name         String
+  description  String?
+  durationMin  Int // minutes
+  price        Decimal         @db.Decimal(10, 2)
+  imageUrl     String?
+  archived     Boolean         @default(false)
+  staff        ServiceStaff[]
+  appointmentItems AppointmentItem[]
+
+  @@map("services")
+}
+
+model ServiceStaff {
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  staffId   String
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@id([serviceId, staffId])
+  @@map("service_staff")
+}
+
+// ── Clients ──────────────────────────────────────────────
+
+model Client {
+  id               String    @id @default(cuid())
+  businessId       String
+  business         Business  @relation(fields: [businessId], references: [id])
+  userId           String?   @unique // set if they created an account
+  user             User?     @relation(fields: [userId], references: [id])
+  name             String
+  phone            String
+  email            String?
+  notes            String? // admin-only internal notes
+  marketingConsent Boolean   @default(false)
+  gdprConsentAt    DateTime?
+
+  appointments Appointment[]
+  reviews      Review[]
+
+  @@unique([businessId, phone]) // dedupe guests by phone per business
+  @@map("clients")
+}
+
+// ── Appointments ─────────────────────────────────────────
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentSource {
+  ONLINE
+  ADMIN
+  STAFF
+}
+
+model Appointment {
+  id                 String              @id @default(cuid())
+  businessId         String
+  business           Business            @relation(fields: [businessId], references: [id])
+  clientId           String
+  client             Client              @relation(fields: [clientId], references: [id])
+  staffId            String
+  staff              Staff               @relation(fields: [staffId], references: [id])
+
+  startAt            DateTime
+  endAt              DateTime // sum of all services' durations
+  status             AppointmentStatus   @default(PENDING)
+  source             AppointmentSource   @default(ONLINE)
+  notes              String? // client request / admin note
+  cancelledAt        DateTime?
+  cancellationReason String?
+
+  items         AppointmentItem[] // multiple services in one visit
+  notifications NotificationLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId, staffId, startAt])
+  @@index([businessId, clientId, startAt])
+  @@map("appointments")
+}
+
+model AppointmentItem {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  serviceId     String
+  service       Service     @relation(fields: [serviceId], references: [id])
+  serviceName   String // snapshot at booking time
+  unitPrice     Decimal     @db.Decimal(10, 2) // snapshot at booking time
+  durationMin   Int // snapshot
+  sortOrder     Int
+
+  @@map("appointment_items")
+}
+
+// ── Availability blocks (holidays, events) ───────────────
+
+model AvailabilityException {
+  id        String   @id @default(cuid())
+  businessId String
+  business  Business @relation(fields: [businessId], references: [id])
+  staffId   String? // null = whole business closed
+  staff     Staff?   @relation(fields: [staffId], references: [id])
+  startAt   DateTime
+  endAt     DateTime
+  reason    String?
+
+  @@index([businessId, startAt, endAt])
+  @@map("availability_exceptions")
+}
+
+// ── Notifications & reviews ──────────────────────────────
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMATION
+  REMINDER
+  RESCHEDULED
+  CANCELLATION
+}
+
+model NotificationLog {
+  id            String              @id @default(cuid())
+  businessId    String
+  business      Business            @relation(fields: [businessId], references: [id])
+  appointmentId String?
+  appointment   Appointment?        @relation(fields: [appointmentId], references: [id])
+  channel       NotificationChannel @default(EMAIL)
+  type          NotificationType
+  recipient     String
+  status        String // SENT | FAILED | QUEUED
+  error         String?
+
+  sentAt DateTime @default(now())
+
+  @@map("notification_logs")
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  businessId    String
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id])
+  appointmentId String      @unique
+  rating        Int
+  comment       String?
+  createdAt     DateTime    @default(now())
+
+  @@map("reviews") // future phase — model reserved now
+}
