@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/crypto";
 import { createSession, isSameOrigin } from "@/lib/auth";
 import { loginSchema } from "@/lib/validation";
-import { rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom, rateLimit } from "@/lib/rate-limit";
 import { Role } from "@/lib/generated/prisma/client";
 
 // Constant-ish work factor for unknown emails to avoid user enumeration timing.
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Pedido inválido" }, { status: 403 });
   }
 
-  const ip = request.headers.get("x-forwarded-for") ?? "local";
+  const ip = clientIpFrom(request);
   const body = await request.json().catch(() => null);
   const parsed = loginSchema.safeParse(body);
   const emailKey = parsed.success ? parsed.data.email.toLowerCase() : "unknown";

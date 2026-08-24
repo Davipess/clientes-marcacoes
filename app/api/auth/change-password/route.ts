@@ -3,6 +3,7 @@ import { getAuthUser, isSameOrigin } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/crypto";
 import { passwordSchema } from "@/lib/validation";
 import { cookies } from "next/headers";
+import { clientIpFrom, rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const schema = z.object({
@@ -13,6 +14,11 @@ const schema = z.object({
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return Response.json({ error: "Pedido inválido" }, { status: 403 });
+  }
+
+  const ip = clientIpFrom(request);
+  if (!rateLimit("pwchange:${ip}", 5, 60_000).ok) {
+    return Response.json({ error: "Demasiadas tentativas." }, { status: 429 });
   }
 
   const user = await getAuthUser();

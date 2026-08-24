@@ -3,6 +3,24 @@ type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
 /**
+ * Client IP for rate limiting. Priority: platform-set headers first
+ * (trusted), then the LAST entry of X-Forwarded-For (appended by the
+ * proxy — earlier entries are client-controlled and spoofable).
+ */
+export function clientIpFrom(request: Request): string {
+  const nf = request.headers.get("x-nf-client-connection-ip"); // Netlify
+  if (nf) return nf;
+  const real = request.headers.get("x-real-ip");
+  if (real) return real;
+  const xff = request.headers.get("x-forwarded-for");
+  if (xff) {
+    const parts = xff.split(",").map((s) => s.trim());
+    return parts[parts.length - 1] || "unknown";
+  }
+  return "unknown";
+}
+
+/**
  * Simple fixed-window rate limiter (in memory).
  * Sufficient for a single-instance deployment; swap for Redis when scaling out.
  */

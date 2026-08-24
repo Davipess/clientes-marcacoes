@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/db";
 import { getAvailableSlots } from "@/lib/booking/availability";
-import { rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom, rateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
-  const ip = request.headers.get("x-forwarded-for") ?? "local";
+  const ip = clientIpFrom(request);
   if (!rateLimit(`slots:${ip}`, 60, 60_000).ok) {
     return Response.json({ error: "Demasiados pedidos." }, { status: 429 });
   }

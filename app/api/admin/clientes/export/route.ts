@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { audit } from "@/lib/audit";
+import { clientIpFrom, rateLimit } from "@/lib/rate-limit";
 import { decryptPiiSafe } from "@/lib/crypto";
 
 function csvEscape(value: string): string {
@@ -11,6 +12,9 @@ function csvEscape(value: string): string {
 
 export async function GET(request: Request) {
   const guard = await requireAdmin(request);
+  if (!rateLimit("csvexport:${clientIpFrom(request)}", 5, 300_000).ok) {
+    return Response.json({ error: "Demasiados pedidos." }, { status: 429 });
+  }
   if (!guard.ok) return guard.response;
 
   const clients = await prisma.client.findMany({

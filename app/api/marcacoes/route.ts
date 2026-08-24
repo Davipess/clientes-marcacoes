@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { createAppointment } from "@/lib/booking/create-appointment";
 import { isSameOrigin } from "@/lib/auth";
-import { rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom, rateLimit } from "@/lib/rate-limit";
 import { queueNotification } from "@/lib/notifications";
 import { normalizePhone, piiLookupHash } from "@/lib/crypto";
 import { z } from "zod";
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Pedido inválido" }, { status: 403 });
   }
 
-  const ip = request.headers.get("x-forwarded-for") ?? "local";
+  const ip = clientIpFrom(request);
   if (!rateLimit(`booking:${ip}`, 6, 60_000).ok) {
     return Response.json(
       { error: "Demasiadas tentativas. Aguarde um momento." },

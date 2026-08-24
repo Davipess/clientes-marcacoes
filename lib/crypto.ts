@@ -115,8 +115,15 @@ export function piiLookupHash(value: string): string {
 
 // Normalize phone numbers for stable hashing across formats.
 export function normalizePhone(phone: string): string {
-  const digits = phone.replace(/[\s()\-.]/g, "");
-  return digits.startsWith("+351") ? digits.slice(4) : digits;
+  // "912 345 678", "+351 912 345 678", "912345678", "351912345678" and
+  // "(+351) 912-345-678" all normalize identically. Leading zeros and
+  // separators are stripped so format variations cannot create new
+  // identities and bypass the abuse-prevention limits (Phase 14).
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("00351")) digits = digits.slice(5);
+  else if (digits.startsWith("351")) digits = digits.slice(3);
+  digits = digits.replace(/^0+/, "");
+  return digits;
 }
 
 // ── Tokens & hashes ──────────────────────────────────────

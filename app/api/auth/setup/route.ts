@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/crypto";
 import { createSession, isSameOrigin } from "@/lib/auth";
 import { setupSchema } from "@/lib/validation";
-import { rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom, rateLimit } from "@/lib/rate-limit";
 import { Role } from "@/lib/generated/prisma/client";
 
 export async function POST(request: Request) {
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Pedido inválido" }, { status: 403 });
   }
 
-  const ip = request.headers.get("x-forwarded-for") ?? "local";
+  const ip = clientIpFrom(request);
   const limited = rateLimit(`setup:${ip}`, 5, 60_000);
   if (!limited.ok) {
     return Response.json(
