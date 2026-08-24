@@ -205,6 +205,8 @@ export function SettingsForm({
               </li>
             ))}
           </ul>
+
+          <AddStaffForm onCreated={() => router.refresh()} />
         </section>
       )}
       {/* Business info */}
@@ -318,6 +320,72 @@ export function SettingsForm({
         )}
         {error && <span className="text-sm text-destructive">{error}</span>}
       </div>
+    </form>
+  );
+}
+
+function AddStaffForm({ onCreated }: { onCreated: () => void }) {
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const data = Object.fromEntries(new FormData(form));
+    setSaving(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/admin/equipa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setErr(json.error ?? "Erro ao criar a técnica.");
+        return;
+      }
+      setMsg(`Conta criada para ${String(data.displayName)} — já pode entrar em /entrar.`);
+      form.reset();
+      onCreated();
+    } catch {
+      setErr("Erro de rede.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-5 space-y-3 rounded-xl border border-dashed border-border p-4">
+      <p className="text-sm font-medium">Adicionar nova técnica</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="new-staff-name">Nome *</Label>
+          <Input id="new-staff-name" name="displayName" required minLength={2} maxLength={80} className="mt-1" />
+        </div>
+        <div>
+          <Label htmlFor="new-staff-email">Email (para entrar) *</Label>
+          <Input id="new-staff-email" name="email" type="email" required className="mt-1" />
+        </div>
+        <div>
+          <Label htmlFor="new-staff-pass">Palavra-passe inicial *</Label>
+          <Input id="new-staff-pass" name="password" type="password" required minLength={12} autoComplete="new-password" className="mt-1" />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Mín. 12 caracteres, com maiúsculas, minúsculas e um dígito.
+          </p>
+        </div>
+        <div>
+          <Label htmlFor="new-staff-bio">Pequena bio (opcional)</Label>
+          <Input id="new-staff-bio" name="bio" maxLength={500} className="mt-1" />
+        </div>
+      </div>
+      {msg && <p className="text-sm text-green-700">{msg}</p>}
+      {err && <p className="text-sm text-destructive">{err}</p>}
+      <Button type="submit" size="sm" className="rounded-full px-5" disabled={saving}>
+        {saving ? "A criar..." : "Criar conta de técnica"}
+      </Button>
     </form>
   );
 }

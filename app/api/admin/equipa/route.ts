@@ -1,6 +1,83 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
+import { hashPassword } from "@/lib/crypto";
+import { emailSchema, passwordSchema } from "@/lib/validation";
+import { Role } from "@/lib/generated/prisma/client";
 import { z } from "zod";
+
+const createSchema = z.object({
+  displayName: z.string().trim().min(2).max(80),
+  email: emailSchema,
+  password: passwordSchema,
+  bio: z.string().trim().max(500).optional(),
+});
+
+export async function POST(request: Request) {
+  const guard = await requireAdmin(request);
+  if (!guard.ok) return guard.response;
+
+  const body = await request.json().catch(() => null);
+  const parsed = createSchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
+      { status: 400 },
+    );
+  }
+  const { displayName, email, password, bio } = parsed.data;
+
+  const duplicate = await prisma.user.findUnique({
+    where: {
+      businessId_email: { businessId: guard.businessId, email },
+    },
+  });
+  if (duplicate) {
+    return Response.json({ error: "Esse email já está em uso." }, { status: 409 });
+  }
+
+  const user = await prisma.user.create({
+    data: {
+      businessId: guard.businessId,
+      role: Role.STAFF,
+      name: displayName,
+      email,
+      passwordHash: await hashPassword(password),
+    },
+  });
+
+  const staff = await prisma.staff.create({
+    data: {
+      businessId: guard.businessId,
+      userId: user.id,
+      displayName,
+      bio: bio ?? null,
+    },
+  });
+
+  // Default schedule Mon-Fri 09:00–18:00; admin can adjust later.
+  await prisma.workSchedule.createMany({
+    data: [1, 2, 3, 4, 5].map((weekday) => ({
+      staffId: staff.id,
+      weekday,
+      startTime: "09:00",
+      endTime: "18:00",
+    })),
+  });
+
+  // Link all active services so the new technician is immediately bookable.
+  const services = await prisma.service.findMany({
+    where: { businessId: guard.businessId, archived: false },
+    select: { id: true },
+  });
+  if (services.length > 0) {
+    await prisma.serviceStaff.createMany({
+      data: services.map((s) => ({ serviceId: s.id, staffId: staff.id })),
+      skipDuplicates: true,
+    });
+  }
+
+  return Response.json({ ok: true, staffId: staff.id }, { status: 201 });
+}
 
 const toggleSchema = z.object({
   staffId: z.string().min(1),
