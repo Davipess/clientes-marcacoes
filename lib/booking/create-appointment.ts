@@ -1,7 +1,7 @@
 import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { encryptPii, normalizePhone, piiLookupHash } from "@/lib/crypto";
-import { parseHHMM, utcIntervalToWallMinutes, weekdayKey } from "./time";
+import { nowZoned, parseHHMM, utcIntervalToWallMinutes, weekdayKey } from "./time";
 
 export type CreateBookingInput = {
   businessId: string;
@@ -117,6 +117,62 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
         const tz = business.timezone;
         const bufferMs = settings.bufferMinutes * 60_000;
         const day = dayPartsInTz(input.startAt, tz);
+
+        // ── Abuse prevention (Phase 14) — phone is the identifier ──
+        const phoneHash = piiLookupHash(normalizePhone(input.client.phone));
+        const existingClient = await tx.client.findUnique({
+          where: { businessId_phoneHash: { businessId: business.id, phoneHash } },
+          select: {
+            id: true,
+            blocked: true,
+            noShowCount: true,
+            _count: {
+              select: {
+                appointments: {
+                  where: {
+                    status: { in: ["PENDING", "CONFIRMED"] },
+                    startAt: { gt: new Date() },
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (existingClient?.blocked) {
+          // Deliberately vague: never disclose the blocking reason publicly.
+          return invalid(
+            "Não foi possível concluir a marcação online. Contacte o salão, por favor.",
+          );
+        }
+        if (
+          existingClient &&
+          existingClient._count.appointments >= settings.maxActiveBookingsPerPhone
+        ) {
+          return invalid(
+            `Já tem ${existingClient._count.appointments} marcações ativas. ` +
+              "Só são permitidas " +
+              `${settings.maxActiveBookingsPerPhone} marcações futuras em simultâneo. ` +
+              "Contacte o salão se precisar de alterar alguma.",
+          );
+        }
+        if (existingClient) {
+          // "Created today" = since local midnight at the business, TODAY.
+          const now = nowZoned(tz);
+          const todayStartLocal = zonedMidnight(now.year, now.month, now.day, tz);
+          const createdToday = await tx.appointment.count({
+            where: {
+              clientId: existingClient.id,
+              createdAt: { gte: todayStartLocal },
+            },
+          });
+          if (createdToday >= settings.maxBookingsPerPhonePerDay) {
+            return invalid(
+              "Já fez várias marcações hoje. Contacte o salão, por favor.",
+            );
+          }
+        }
+
         const weekday = weekdayKey(day.weekday);
         const startWall = day.hour * 60 + day.minute;
         const blockEndWall = startWall + totalDurationMin;
@@ -234,8 +290,6 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
         }
 
         // ── Upsert client by phone hash (sole identifier) ──────
-        const phoneHash = piiLookupHash(normalizePhone(input.client.phone));
-
         const client = await tx.client.upsert({
           where: {
             businessId_phoneHash: { businessId: business.id, phoneHash },

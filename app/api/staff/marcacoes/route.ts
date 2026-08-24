@@ -19,19 +19,35 @@ export async function PATCH(request: Request) {
   const { id, action } = parsed.data;
 
   // Ownership: staff may only touch their own appointments.
-  const updated = await prisma.appointment.updateMany({
+  const appointment = await prisma.appointment.findFirst({
     where: {
       id,
       staffId: guard.staffId,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
-    data: { status: action },
+    select: { id: true, clientId: true },
   });
-  if (updated.count === 0) {
+  if (!appointment) {
     return Response.json(
       { error: "Marcação não encontrada ou já finalizada." },
       { status: 404 },
     );
   }
+
+  await prisma.$transaction([
+    prisma.appointment.update({
+      where: { id: appointment.id },
+      data: { status: action },
+    }),
+    ...(action === "NO_SHOW"
+      ? [
+          prisma.client.update({
+            where: { id: appointment.clientId },
+            data: { noShowCount: { increment: 1 } },
+          }),
+        ]
+      : []),
+  ]);
+
   return Response.json({ ok: true });
 }

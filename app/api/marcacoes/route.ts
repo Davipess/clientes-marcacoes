@@ -3,6 +3,7 @@ import { createAppointment } from "@/lib/booking/create-appointment";
 import { isSameOrigin } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { queueNotification } from "@/lib/notifications";
+import { normalizePhone, piiLookupHash } from "@/lib/crypto";
 import { z } from "zod";
 
 const bookingSchema = z.object({
@@ -66,12 +67,12 @@ export async function POST(request: Request) {
   }
 
   // Phase 7: confirmation notification queued (delivery channel pending —
-  // see lib/notifications.ts).
+  // see lib/notifications.ts). Only the phone hash is logged, never the raw number.
   await queueNotification({
     businessId: business.id,
     appointmentId: result.appointmentId,
     type: "BOOKING_CONFIRMATION",
-    recipient: parsed.data.telefone,
+    recipient: piiLookupHash(normalizePhone(parsed.data.telefone)),
     message: `Marcação confirmada para ${parsed.data.nome}`,
   });
 

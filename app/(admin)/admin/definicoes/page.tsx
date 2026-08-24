@@ -65,6 +65,12 @@ export default async function AdminDefinicoesPage() {
             business.settings?.cancellationWindowHours ?? 24,
           cancellationPolicyText:
             business.settings?.cancellationPolicyText ?? "",
+          maxActiveBookingsPerPhone:
+            business.settings?.maxActiveBookingsPerPhone ?? 3,
+          maxBookingsPerPhonePerDay:
+            business.settings?.maxBookingsPerPhonePerDay ?? 3,
+          noShowFlagThreshold: business.settings?.noShowFlagThreshold ?? 2,
+          retentionMonths: business.settings?.retentionMonths ?? 24,
         }}
         soloMode={{
           hasOwnProfile: Boolean(ownStaffProfile),

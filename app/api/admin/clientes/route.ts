@@ -25,6 +25,72 @@ export async function PATCH(request: Request) {
   return Response.json({ ok: true });
 }
 
+const actionSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("block"),
+    id: z.string().min(1),
+    reason: z.string().trim().min(3).max(300),
+  }),
+  z.object({ action: z.literal("unblock"), id: z.string().min(1) }),
+  z.object({ action: z.literal("resetNoShows"), id: z.string().min(1) }),
+]);
+
+export async function PUT(request: Request) {
+  const guard = await requireAdmin(request);
+  if (!guard.ok) return guard.response;
+
+  const body = await request.json().catch(() => null);
+  const parsed = actionSchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
+      { status: 400 },
+    );
+  }
+  const { action, id } = parsed.data;
+
+  const client = await prisma.client.findFirst({
+    where: { id, businessId: guard.businessId },
+    select: { id: true, name: true },
+  });
+  if (!client) {
+    return Response.json({ error: "Cliente não encontrado." }, { status: 404 });
+  }
+
+  switch (action) {
+    case "block": {
+      await prisma.client.update({
+        where: { id: client.id },
+        data: {
+          blocked: true,
+          blockReason: parsed.data.reason,
+          blockedAt: new Date(),
+        },
+      });
+      await audit(guard.businessId, guard.email, "client.block", client.name);
+      break;
+    }
+    case "unblock": {
+      await prisma.client.update({
+        where: { id: client.id },
+        data: { blocked: false, blockReason: null, blockedAt: null },
+      });
+      await audit(guard.businessId, guard.email, "client.unblock", client.name);
+      break;
+    }
+    case "resetNoShows": {
+      await prisma.client.update({
+        where: { id: client.id },
+        data: { noShowCount: 0 },
+      });
+      await audit(guard.businessId, guard.email, "client.reset_no_shows", client.name);
+      break;
+    }
+  }
+
+  return Response.json({ ok: true });
+}
+
 const deleteSchema = z.object({ id: z.string().min(1) });
 
 /**

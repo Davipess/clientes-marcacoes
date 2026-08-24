@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
-import { decryptPii } from "@/lib/crypto";
+import { decryptPiiSafe } from "@/lib/crypto";
 import { AgendaView } from "@/components/admin/agenda-view";
 
 export const metadata: Metadata = { title: "Agenda — Administração" };
@@ -91,7 +91,7 @@ export default async function AdminAgendaPage({
           source: a.source,
           notes: a.notes ?? "",
           clientName: a.client.name,
-          clientPhone: a.client.phoneEnc ? decryptPii(a.client.phoneEnc) : null,
+          clientPhone: a.client.phoneEnc ? decryptPiiSafe(a.client.phoneEnc) : null,
           services: a.items.map((i) => i.serviceName),
         }))}
       />

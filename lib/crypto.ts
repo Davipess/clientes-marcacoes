@@ -92,6 +92,20 @@ export function decryptPii(payload: string): string {
   ]).toString("utf8");
 }
 
+/**
+ * Decrypt that never throws: returns null for missing, tampered or
+ * anonymized ("[apagado]") values. Use for display paths; use decryptPii
+ * where validity is a hard requirement.
+ */
+export function decryptPiiSafe(payload: string | null | undefined): string | null {
+  if (!payload) return null;
+  try {
+    return decryptPii(payload);
+  } catch {
+    return null;
+  }
+}
+
 // Deterministic lookup hash for exact-match queries on encrypted fields.
 export function piiLookupHash(value: string): string {
   return createHmac("sha256", macKey())

@@ -29,6 +29,7 @@ export default async function PrivacidadePage() {
             (necessários para gerir a marcação) e as notas que escreva, se
             quiser. O seu número de telefone é guardado de forma encriptada e
             é a única forma de identificação usada — sem contas nem palavras-passe.
+            Não recolhemos emails nem quaisquer outros dados de contacto.
           </p>
         </section>
         <section>

@@ -24,6 +24,10 @@ const settingsSchema = z.object({
   maxLeadDays: z.number().int().min(1).max(365),
   cancellationWindowHours: z.number().int().min(0).max(168),
   cancellationPolicyText: z.string().trim().max(1000),
+  maxActiveBookingsPerPhone: z.number().int().min(1).max(20),
+  maxBookingsPerPhonePerDay: z.number().int().min(1).max(20),
+  noShowFlagThreshold: z.number().int().min(1).max(20),
+  retentionMonths: z.number().int().min(6).max(120),
 });
 
 export async function PATCH(request: Request) {
@@ -70,6 +74,10 @@ export async function PATCH(request: Request) {
         maxLeadDays: data.maxLeadDays,
         cancellationWindowHours: data.cancellationWindowHours,
         cancellationPolicyText: data.cancellationPolicyText,
+        maxActiveBookingsPerPhone: data.maxActiveBookingsPerPhone,
+        maxBookingsPerPhonePerDay: data.maxBookingsPerPhonePerDay,
+        noShowFlagThreshold: data.noShowFlagThreshold,
+        retentionMonths: data.retentionMonths,
       },
       create: {
         businessId: guard.businessId,
@@ -79,6 +87,10 @@ export async function PATCH(request: Request) {
         maxLeadDays: data.maxLeadDays,
         cancellationWindowHours: data.cancellationWindowHours,
         cancellationPolicyText: data.cancellationPolicyText,
+        maxActiveBookingsPerPhone: data.maxActiveBookingsPerPhone,
+        maxBookingsPerPhonePerDay: data.maxBookingsPerPhonePerDay,
+        noShowFlagThreshold: data.noShowFlagThreshold,
+        retentionMonths: data.retentionMonths,
       },
     }),
   ]);

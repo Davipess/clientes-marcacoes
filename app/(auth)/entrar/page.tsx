@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -21,7 +21,7 @@ export default function EntrarPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setErro(json.error ?? "Erro ao iniciar sessão");
+        setErro(json.error ?? "Erro ao iniciar sessÃ£o");
         return;
       }
       router.push(json.redirect ?? "/admin");
@@ -34,9 +34,9 @@ export default function EntrarPage() {
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h1 className="mb-1 text-xl font-semibold">Iniciar sessão</h1>
+      <h1 className="mb-1 text-xl font-semibold">Iniciar sessÃ£o</h1>
       <p className="mb-6 text-sm text-neutral-500">
-        Área reservada a administradores e colaboradores.
+        Ãrea reservada a administradores e colaboradores.
       </p>
 
       <form onSubmit={submeter} className="space-y-4">
@@ -77,12 +77,6 @@ export default function EntrarPage() {
           {aCarregar ? "A entrar..." : "Entrar"}
         </button>
       </form>
-
-      <p className="mt-4 text-center text-sm">
-        <a href="/recuperar-palavra-passe" className="text-neutral-500 hover:text-neutral-800">
-          Esqueceu-se da palavra-passe?
-        </a>
-      </p>
     </div>
   );
 }

@@ -33,6 +33,10 @@ export function SettingsForm({
     maxLeadDays: number;
     cancellationWindowHours: number;
     cancellationPolicyText: string;
+    maxActiveBookingsPerPhone: number;
+    maxBookingsPerPhonePerDay: number;
+    noShowFlagThreshold: number;
+    retentionMonths: number;
   };
   soloMode: {
     hasOwnProfile: boolean;
@@ -78,6 +82,10 @@ export function SettingsForm({
           maxLeadDays: Number(formData.get("maxLeadDays")),
           cancellationWindowHours: Number(formData.get("cancellationWindowHours")),
           cancellationPolicyText: String(formData.get("cancellationPolicyText")),
+          maxActiveBookingsPerPhone: Number(formData.get("maxActiveBookingsPerPhone")),
+          maxBookingsPerPhonePerDay: Number(formData.get("maxBookingsPerPhonePerDay")),
+          noShowFlagThreshold: Number(formData.get("noShowFlagThreshold")),
+          retentionMonths: Number(formData.get("retentionMonths")),
         }),
       });
       const json = await res.json();
@@ -306,6 +314,33 @@ export function SettingsForm({
             placeholder="Pode cancelar ou alterar gratuitamente até 24 horas antes."
             className="mt-1.5"
           />
+        </div>
+      </section>
+
+      {/* Abuse prevention */}
+      <section className="space-y-4 rounded-2xl border border-border/70 bg-card p-5">
+        <h2 className="font-heading text-lg font-semibold">Prevenção de abusos</h2>
+        <p className="text-xs text-muted-foreground">
+          Limites por número de telefone. Quem atinge o limite de faltas fica
+          com um aviso no painel — o bloqueio é sempre manual, nunca automático.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="maxActive">Máx. marcações futuras por telefone</Label>
+            <Input id="maxActive" name="maxActiveBookingsPerPhone" type="number" min={1} max={20} defaultValue={settings.maxActiveBookingsPerPhone} className="mt-1.5" />
+          </div>
+          <div>
+            <Label htmlFor="maxDaily">Máx. marcações criadas por dia</Label>
+            <Input id="maxDaily" name="maxBookingsPerPhonePerDay" type="number" min={1} max={20} defaultValue={settings.maxBookingsPerPhonePerDay} className="mt-1.5" />
+          </div>
+          <div>
+            <Label htmlFor="noShowThreshold">Faltas para aviso de risco</Label>
+            <Input id="noShowThreshold" name="noShowFlagThreshold" type="number" min={1} max={20} defaultValue={settings.noShowFlagThreshold} className="mt-1.5" />
+          </div>
+          <div>
+            <Label htmlFor="retentionMonths">Manter histórico (meses)</Label>
+            <Input id="retentionMonths" name="retentionMonths" type="number" min={6} max={120} defaultValue={settings.retentionMonths} className="mt-1.5" />
+          </div>
         </div>
       </section>
 

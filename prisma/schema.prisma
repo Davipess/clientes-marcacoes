@@ -56,6 +56,12 @@ model BusinessSettings {
   reminderHoursBefore     Int    @default(24)
   notificationEmailText   String? // custom text injected into emails
 
+  // ── Abuse prevention limits (Phase 14) ──
+  maxActiveBookingsPerPhone Int @default(3) // future pending/confirmed per phone
+  maxBookingsPerPhonePerDay Int @default(3) // new bookings created per day per phone
+  noShowFlagThreshold       Int @default(2) // no-shows before the "at risk" badge
+  retentionMonths           Int @default(24) // final-state appointment cleanup age
+
   @@map("business_settings")
 }
 
@@ -211,6 +217,12 @@ model Client {
   notes            String? // admin-only internal notes
   marketingConsent Boolean   @default(false)
   gdprConsentAt    DateTime?
+
+  // ── No-show protection & abuse prevention (Phase 14) ──
+  noShowCount Int     @default(0) // persists even after appointment cleanup
+  blocked     Boolean @default(false) // manual admin block from online booking
+  blockReason String?
+  blockedAt   DateTime?
 
   appointments Appointment[]
   reviews      Review[]

@@ -256,14 +256,14 @@ export function BookingWizard({
           ✨
         </div>
         <h1 className="mt-6 font-heading text-2xl font-semibold sm:text-3xl">
-          Marcação confirmada!
+          Marcação agendada!
         </h1>
         <p className="mt-3 text-muted-foreground">
           Esperamos por si <strong className="text-foreground">{done.when}</strong>.
         </p>
         <p className="mt-4 rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground">
-          Pagamento efetuado no local. Receberá um email de confirmação em
-          breve. Até já!
+          📅 Guarde esta data no calendário do seu telemóvel para não se
+          esquecer. Pagamento efetuado no local.
         </p>
         <Button asChild variant="outline" className="mt-7 rounded-full">
           <Link href="/">Voltar à página inicial</Link>
