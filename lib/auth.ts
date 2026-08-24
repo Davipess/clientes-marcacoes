@@ -3,8 +3,12 @@ import { prisma } from "@/lib/db";
 import { generateToken, sha256Hex } from "@/lib/crypto";
 import type { Role } from "@/lib/generated/prisma/client";
 
-const SESSION_COOKIE = "sessao";
-const SESSION_TTL_DAYS = 30;
+const IS_PROD = process.env.NODE_ENV === "production";
+// __Host- prefix (production): cookie can only be set by the exact origin,
+// cannot be overwritten from subdomains, and requires Secure + Path=/.
+const SESSION_COOKIE = IS_PROD ? "__Host-sessao" : "sessao";
+// 7 days — short-lived baseline for admin tooling per current security guidance.
+const SESSION_TTL_DAYS = 7;
 
 export type AuthUser = {
   id: string;

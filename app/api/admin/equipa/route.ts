@@ -1,4 +1,4 @@
-﻿﻿import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { hashPassword } from "@/lib/crypto";
 import { emailSchema, passwordSchema } from "@/lib/validation";
@@ -117,12 +117,16 @@ export async function PATCH(request: Request) {
 
   const staff = await prisma.staff.findFirst({
     where: { id: staffId, businessId: guard.businessId },
+    select: { id: true, active: true },
   });
   if (!staff) {
     return Response.json({ error: "Técnica não encontrada." }, { status: 404 });
   }
 
-  if (!active) {
+  // Only enforce the "last active technician" guard when actually
+  // deactivating someone who is currently active (re-activating is always
+  // allowed, and toggling an already-inactive staff member is a no-op).
+  if (!active && staff.active) {
     const activeCount = await prisma.staff.count({
       where: { businessId: guard.businessId, active: true },
     });

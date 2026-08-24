@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 import { SettingsForm } from "@/components/admin/settings-form";
+import { PasswordChange } from "@/components/password-change";
 
 export const metadata: Metadata = { title: "Definições — Administração" };
 
@@ -50,6 +51,9 @@ export default async function AdminDefinicoesPage() {
           name: business.name,
           address: business.address ?? "",
           email: business.email ?? "",
+          logoUrl: business.logoUrl,
+          primaryColor: business.primaryColor,
+          secondaryColor: business.secondaryColor,
         }}
         openingHours={
           (business.settings?.openingHours as Record<
@@ -83,6 +87,14 @@ export default async function AdminDefinicoesPage() {
           })),
         }}
       />
+
+      <section className="mt-8 rounded-2xl border border-border/70 bg-card p-5">
+        <h2 className="font-heading text-lg font-semibold">Palavra-passe</h2>
+        <p className="mb-4 mt-1 text-sm text-muted-foreground">
+          Recomendação: use uma palavra-passe exclusiva desta aplicação.
+        </p>
+        <PasswordChange />
+      </section>
     </div>
   );
 }

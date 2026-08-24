@@ -20,10 +20,28 @@ export default async function PublicLayout({
   const name = data?.business.name ?? "Salão";
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div
+      className="flex min-h-screen flex-col"
+      style={
+        data
+          ? ({
+              "--primary": data.business.primaryColorHex,
+              "--secondary": data.business.secondaryColorHex,
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <Link href="/" className="font-heading text-xl font-semibold tracking-tight text-foreground">
+          <Link href="/" className="flex items-center gap-2 font-heading text-xl font-semibold tracking-tight text-foreground">
+            {data?.business.logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={data.business.logoUrl}
+                alt=""
+                className="h-8 w-8 rounded-lg object-contain"
+              />
+            )}
             {name}
           </Link>
           <nav className="flex items-center gap-1 sm:gap-4">

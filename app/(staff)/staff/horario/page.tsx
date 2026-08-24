@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 import { Role } from "@/lib/generated/prisma/client";
 import { BlockManager } from "@/components/staff/block-manager";
+import { PasswordChange } from "@/components/password-change";
 
 export const metadata: Metadata = { title: "Bloquear horários" };
 
@@ -39,6 +40,10 @@ export default async function StaffHorarioPage() {
       <p className="mt-1 text-sm text-muted-foreground">
         Os horários bloqueados deixam de estar disponíveis no site de imediato.
       </p>
+      <section className="mb-8 rounded-2xl border border-border/70 bg-card p-5">
+        <h2 className="font-heading text-lg font-semibold">Palavra-passe</h2>
+        <PasswordChange />
+      </section>
       <BlockManager
         blocks={blocks.map((b) => ({
           id: b.id,

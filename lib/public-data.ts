@@ -76,6 +76,9 @@ export async function getPublicData() {
       email: business.email,
       primaryColor: business.primaryColor,
       secondaryColor: business.secondaryColor,
+      primaryColorHex: oklchOrHexToCss(business.primaryColor),
+      secondaryColorHex: oklchOrHexToCss(business.secondaryColor),
+      logoUrl: business.logoUrl,
       timezone: business.timezone,
     },
     openingHours: (business.settings?.openingHours ?? null) as Record<
@@ -89,3 +92,12 @@ export async function getPublicData() {
 }
 
 export type PublicData = NonNullable<Awaited<ReturnType<typeof getPublicData>>>;
+
+/**
+ * Business colors are stored as hex (#rrggbb, editable in the admin).
+ * Passed straight through to inline CSS variables — the regex guard keeps
+ * malformed values from ever reaching the DOM.
+ */
+function oklchOrHexToCss(value: string): string {
+  return /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#C2185B";
+}

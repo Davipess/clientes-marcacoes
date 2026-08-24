@@ -1,7 +1,7 @@
 ﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { createAppointment } from "@/lib/booking/create-appointment";
-import { cancelAppointment } from "@/lib/booking/modify-appointment";
+import { cancelAppointment, rescheduleAppointment } from "@/lib/booking/modify-appointment";
 import { audit } from "@/lib/audit";
 import { z } from "zod";
 
@@ -54,6 +54,34 @@ const patchSchema = z.object({
   id: z.string().min(1),
   action: z.enum(["COMPLETED", "NO_SHOW", "CANCEL"]),
 });
+
+const rescheduleSchema = z.object({
+  id: z.string().min(1),
+  inicio: z.string().datetime(),
+});
+
+export async function PUT(request: Request) {
+  const guard = await requireAdmin(request);
+  if (!guard.ok) return guard.response;
+
+  const body = await request.json().catch(() => null);
+  const parsed = rescheduleSchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json({ error: "Dados inválidos." }, { status: 400 });
+  }
+
+  // Admin reschedules bypass the client policy window but never the
+  // availability rules.
+  const result = await rescheduleAppointment(
+    parsed.data.id,
+    new Date(parsed.data.inicio),
+  );
+  if (!result.ok) {
+    return Response.json({ error: result.message }, { status: result.code === "NOT_FOUND" ? 404 : 409 });
+  }
+  await audit(guard.businessId, guard.email, "appointment.reschedule", parsed.data.id);
+  return Response.json({ ok: true });
+}
 
 export async function PATCH(request: Request) {
   const guard = await requireAdmin(request);

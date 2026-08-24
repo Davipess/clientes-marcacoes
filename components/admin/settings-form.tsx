@@ -25,7 +25,14 @@ export function SettingsForm({
   settings,
   soloMode,
 }: {
-  business: { name: string; address: string; email: string };
+  business: {
+    name: string;
+    address: string;
+    email: string;
+    logoUrl: string | null;
+    primaryColor: string;
+    secondaryColor: string;
+  };
   openingHours: Hours;
   settings: {
     bufferMinutes: number;
@@ -56,6 +63,57 @@ export function SettingsForm({
   const [error, setError] = useState<string | null>(null);
   const [activatingSolo, setActivatingSolo] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState(business.logoUrl);
+  const [primaryColor, setPrimaryColor] = useState(business.primaryColor);
+  const [secondaryColor, setSecondaryColor] = useState(business.secondaryColor);
+  const [brandSaving, setBrandSaving] = useState(false);
+  const [brandSaved, setBrandSaved] = useState(false);
+
+  async function uploadLogo(file: File) {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 400 / bitmap.width);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob>((resolve) =>
+      canvas.toBlob((b) => resolve(b ?? file), "image/webp", 0.85),
+    );
+    const form = new FormData();
+    form.append("ficheiro", new File([blob], "logo.webp", { type: "image/webp" }));
+    const res = await fetch("/api/admin/imagens", { method: "POST", body: form });
+    const json = await res.json();
+    if (res.ok) setLogoUrl(json.url);
+    else setError(json.error ?? "Erro no envio do logótipo.");
+  }
+
+  async function saveBranding() {
+    setBrandSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/branding", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          logoUrl,
+          primaryColor,
+          secondaryColor,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Erro ao guardar a identidade visual.");
+        return;
+      }
+      setBrandSaved(true);
+      setTimeout(() => setBrandSaved(false), 2500);
+      router.refresh();
+    } catch {
+      setError("Erro de rede.");
+    } finally {
+      setBrandSaving(false);
+    }
+  }
 
   function setDay(day: string, closed: boolean, open?: string, close?: string) {
     setHours((prev) => ({
@@ -144,6 +202,73 @@ export function SettingsForm({
 
   return (
     <form action={submit} className="mt-6 space-y-8">
+      {/* Branding */}
+      <section className="space-y-4 rounded-2xl border border-border/70 bg-card p-5">
+        <h2 className="font-heading text-lg font-semibold">Identidade visual</h2>
+        <p className="text-xs text-muted-foreground">
+          Logótipo e cores aplicados em todo o site público.
+        </p>
+        <div className="flex items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoUrl ?? undefined}
+            alt=""
+            className="h-16 w-16 rounded-xl bg-gradient-to-br from-secondary to-accent object-contain"
+          />
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="text-sm file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2 file:text-sm file:font-medium file:text-secondary-foreground hover:file:brightness-95"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void uploadLogo(file);
+            }}
+          />
+        </div>
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <Label htmlFor="cor-primaria">Cor principal</Label>
+            <div className="mt-1.5 flex items-center gap-2">
+              <input
+                id="cor-primaria"
+                type="color"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-input"
+              />
+              <span className="text-sm tabular-nums text-muted-foreground">{primaryColor}</span>
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="cor-secundaria">Cor secundária</Label>
+            <div className="mt-1.5 flex items-center gap-2">
+              <input
+                id="cor-secundaria"
+                type="color"
+                value={secondaryColor}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-input"
+              />
+              <span className="text-sm tabular-nums text-muted-foreground">{secondaryColor}</span>
+            </div>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            className="rounded-full px-5"
+            disabled={brandSaving}
+            onClick={saveBranding}
+          >
+            {brandSaving ? "A guardar..." : "Guardar identidade"}
+          </Button>
+          {brandSaved && (
+            <span className="animate-fade-in text-xs text-green-700">
+              Guardado ✓ — visível no site público
+            </span>
+          )}
+        </div>
+      </section>
+
       {/* Solo mode / team */}
       {soloMode.staff.length === 0 && (
         <section className="rounded-2xl border border-primary/30 bg-secondary/40 p-5">

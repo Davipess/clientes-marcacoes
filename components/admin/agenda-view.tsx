@@ -55,6 +55,7 @@ export function AgendaView({
   const [error, setError] = useState<string | null>(null);
   // Two-step inline confirmation instead of window.confirm (more predictable).
   const [pending, setPending] = useState<{ id: string; action: string } | null>(null);
+  const [rescheduleFor, setRescheduleFor] = useState<{ id: string; data: string; hora: string } | null>(null);
 
   const pretty = new Date(`${date}T12:00:00Z`).toLocaleDateString("pt-PT", {
     weekday: "long",
@@ -82,6 +83,29 @@ export function AgendaView({
         setError(json.error ?? "Erro.");
         return;
       }
+      router.refresh();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function reschedule() {
+    if (!rescheduleFor) return;
+    setBusyId(rescheduleFor.id);
+    setError(null);
+    try {
+      const inicio = wallToIso(rescheduleFor.data, rescheduleFor.hora, timezone);
+      const res = await fetch("/api/admin/marcacoes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: rescheduleFor.id, inicio }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Erro ao reagendar.");
+        return;
+      }
+      setRescheduleFor(null);
       router.refresh();
     } finally {
       setBusyId(null);
@@ -273,6 +297,26 @@ export function AgendaView({
                     type="button"
                     size="sm"
                     variant="outline"
+                    className="rounded-full"
+                    disabled={busyId === appt.id}
+                    onClick={() =>
+                      setRescheduleFor({
+                        id: appt.id,
+                        data: date,
+                        hora: new Date(appt.startAt).toLocaleTimeString("pt-PT", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: timezone,
+                        }),
+                      })
+                    }
+                  >
+                    Reagendar
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
                     className="rounded-full text-destructive hover:text-destructive"
                     disabled={busyId === appt.id}
                     onClick={() => act(appt.id, "CANCEL")}
@@ -280,6 +324,52 @@ export function AgendaView({
                     {pending?.id === appt.id && pending.action === "CANCEL"
                       ? "Confirmar cancelamento?"
                       : "Cancelar"}
+                  </Button>
+                </div>
+              )}
+              {rescheduleFor?.id === appt.id && (
+                <div className="animate-fade-in mt-3 flex flex-wrap items-end gap-2 rounded-xl bg-muted/60 p-3">
+                  <div>
+                    <Label htmlFor={`rs-data-${appt.id}`} className="text-xs">Novo dia</Label>
+                    <Input
+                      id={`rs-data-${appt.id}`}
+                      type="date"
+                      value={rescheduleFor.data}
+                      onChange={(e) =>
+                        setRescheduleFor({ ...rescheduleFor, data: e.target.value })
+                      }
+                      className="mt-1 w-40"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`rs-hora-${appt.id}`} className="text-xs">Nova hora</Label>
+                    <Input
+                      id={`rs-hora-${appt.id}`}
+                      type="time"
+                      step={900}
+                      value={rescheduleFor.hora}
+                      onChange={(e) =>
+                        setRescheduleFor({ ...rescheduleFor, hora: e.target.value })
+                      }
+                      className="mt-1 w-28"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="rounded-full"
+                    disabled={busyId === appt.id}
+                    onClick={() => void reschedule()}
+                  >
+                    {busyId === appt.id ? "A guardar..." : "Confirmar"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setRescheduleFor(null)}
+                  >
+                    Cancelar
                   </Button>
                 </div>
               )}

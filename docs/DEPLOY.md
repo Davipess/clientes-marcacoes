@@ -56,3 +56,16 @@
 - Recuperação de palavra-passe: o link é registado no log do servidor
   (dev). Em produção, configurar Resend (free tier: 100 emails/dia) e ligar
   em `app/api/auth/forgot-password/route.ts` — apenas para staff/admin.
+
+## Segurança em produção (notas)
+
+- **Rate limiting em memória**: funciona numa única instância; se escalar
+  horizontalmente, migrar para Upstash Redis (free tier) — ver lib/rate-limit.ts.
+- **MFA para admin**: campo 	woFactorSecretEnc já reservado no schema; TOTP é o
+  próximo passo no roadmap de segurança.
+- **Backups**: ativar backups automáticos no Neon (plano free inclui histórico
+  de 24h; point-in-time restore disponível). Exportar pg_dump semanal para
+  redundância externa.
+- **Dependências**: correr 
+pm audit antes de cada atualização; manter
+  Next.js na versão mais recente (patch de CVE críticos históricos).
