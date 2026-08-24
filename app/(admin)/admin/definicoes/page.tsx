@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { PasswordChange } from "@/components/password-change";
+import { ProfileEditor } from "@/components/admin/profile-editor";
 import { SiteContentEditor } from "@/components/admin/site-content-editor";
 import { parseSiteContent } from "@/lib/public-data";
 
@@ -91,6 +92,12 @@ export default async function AdminDefinicoesPage() {
       />
 
       <SiteContentEditor initial={parseSiteContent(business.settings?.siteContent)} />
+
+      <section className="mt-8 rounded-2xl border border-border/70 bg-card p-5">
+        <h2 className="font-heading text-lg font-semibold">O meu perfil</h2>
+        <p className="mb-4 mt-1 text-sm text-muted-foreground">O seu nome, email de login e o nome p&uacute;blico como t&eacute;cnica.</p>
+        <ProfileEditor name={user.name} email={user.email} technicianName={ownStaffProfile?.displayName ?? null} />
+      </section>
 
       <section className="mt-8 rounded-2xl border border-border/70 bg-card p-5">
         <h2 className="font-heading text-lg font-semibold">Palavra-passe</h2>

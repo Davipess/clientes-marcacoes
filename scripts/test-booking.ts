@@ -29,10 +29,10 @@ async function main() {
   const manicure = services.find((s) => s.name === "Manicure")!;
   const pedicure = services.find((s) => s.name === "Pedicure")!;
 
-  // Pin one staff member so conflict tests are deterministic (multiple
-  // technicians exist in this database).
+  // Pin one ACTIVE staff member so conflict tests are deterministic
+  // (multiple technicians exist; some may be deactivated by the owner).
   const anaStaff = await prisma.staff.findFirstOrThrow({
-    where: { user: { email: "ana@salaoexemplo.pt" } },
+    where: { businessId: business.id, active: true },
     select: { id: true },
   });
 

@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   const ip = clientIpFrom(request);
-  if (!rateLimit("pwchange:${ip}", 5, 60_000).ok) {
+  if (!rateLimit(`pwchange:${ip}`, 5, 60_000).ok) {
     return Response.json({ error: "Demasiadas tentativas." }, { status: 429 });
   }
 

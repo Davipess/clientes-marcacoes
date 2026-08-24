@@ -25,22 +25,6 @@ function assert(cond: boolean, label: string) {
   else bad(label);
 }
 
-function wallToIso(date: string, time: string, timeZone: string): string {
-  const [y, m, d] = date.split("-").map(Number);
-  const [hh, mm] = time.split(":").map(Number);
-  const guess = Date.UTC(y, m - 1, d, hh, mm);
-  const dtf = new Intl.DateTimeFormat("en-US", {
-    timeZone, hour12: false, year: "numeric", month: "2-digit",
-    day: "2-digit", hour: "2-digit", minute: "2-digit",
-  });
-  const parts: Record<string, string> = {};
-  for (const p of dtf.formatToParts(new Date(guess))) parts[p.type] = p.value;
-  const hour = parts.hour === "24" ? 0 : Number(parts.hour);
-  const offset =
-    Date.UTC(+parts.year, +parts.month - 1, +parts.day, hour, +parts.minute) - guess;
-  return new Date(guess - offset).toISOString();
-}
-
 // Slot futuro alinhado a horas uteis (10:00 UTC, Ter-Sex), evita Domingo/Sabado.
 function futureSlotIso(minDaysAhead: number): string {
   const d = new Date(Date.now() + minDaysAhead * 86_400_000);
@@ -49,6 +33,7 @@ function futureSlotIso(minDaysAhead: number): string {
     Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 10, 0),
   ).toISOString();
 }
+
 async function main() {
   for (let i = 0; i < 20; i++) {
     try {
@@ -176,14 +161,6 @@ async function main() {
     headers: { Cookie: cookieB },
   });
   assert(logout.ok && [401, 403, 405].includes(afterLogout.status), `logout invalida a sessao (logout=${logout.status}, depois=${afterLogout.status})`);
-
-  // Re-login B for later tests.
-  const reloginB = await fetch(`${BASE}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...ORIGIN },
-    body: JSON.stringify({ email: "adminb@audit.local", password: "PassAuditB123" }),
-  });
-  const cookieB2 = (reloginB.headers.get("set-cookie") ?? "").split(";")[0];
 
   // No password-reset endpoints exist (removed by decision) + no client login UI.
   const resetRoute = await fetch(`${BASE}/api/auth/reset-password`, { method: "POST" });
@@ -420,7 +397,7 @@ async function main() {
     ["GET", "/robots.txt", undefined],
   ];
   let pubClean = true;
-  for (const [method, path] of pubRoutes) {
+  for (const [, path] of pubRoutes) {
     const r = await fetch(`${BASE}${path}`);
     const t = await r.text();
     const testPhones = ["911111111", "922222222", "912345678", "913333333", "914444444", "900000001", "900000002"];

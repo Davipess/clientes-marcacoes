@@ -12,7 +12,8 @@ function csvEscape(value: string): string {
 
 export async function GET(request: Request) {
   const guard = await requireAdmin(request);
-  if (!rateLimit("csvexport:${clientIpFrom(request)}", 5, 300_000).ok) {
+  const ip = clientIpFrom(request);
+  if (!rateLimit(`csvexport:${ip}`, 5, 300_000).ok) {
     return Response.json({ error: "Demasiados pedidos." }, { status: 429 });
   }
   if (!guard.ok) return guard.response;
