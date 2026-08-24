@@ -3,16 +3,14 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { createAppointment } from "@/lib/booking/create-appointment";
 import { cancelAppointment, rescheduleAppointment } from "@/lib/booking/modify-appointment";
 import { audit } from "@/lib/audit";
+import { phoneSchema } from "@/lib/validation";
 import { z } from "zod";
 
 const createSchema = z.object({
   servicos: z.array(z.string().min(1)).min(1).max(10),
   inicio: z.string().datetime(),
   nome: z.string().trim().min(2).max(120),
-  telefone: z
-    .string()
-    .trim()
-    .regex(/^[+\d][\d\s().-]{7,19}$/, "Telefone inválido"),
+  telefone: phoneSchema,
   notas: z.string().trim().max(500).optional(),
 });
 

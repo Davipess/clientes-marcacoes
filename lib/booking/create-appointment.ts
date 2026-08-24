@@ -441,9 +441,10 @@ function zonedMidnight(
   day: number,
   timeZone: string,
 ): Date {
-  const guess = Date.UTC(year, month - 1, day, 12);
-  const offset = wallOffsetMs(new Date(guess), timeZone);
-  return new Date(guess - offset);
+  // Offset medido ao meio-dia (evita ambiguidade DST); aplicado à meia-noite.
+  const noon = Date.UTC(year, month - 1, day, 12);
+  const offset = wallOffsetMs(new Date(noon), timeZone);
+  return new Date(Date.UTC(year, month - 1, day, 0, 0) - offset);
 }
 
 function wallOffsetMs(date: Date, timeZone: string): number {

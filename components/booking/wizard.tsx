@@ -541,7 +541,10 @@ export function BookingWizard({
                   name="telefone"
                   type="tel"
                   required
-                  placeholder="+351 912 345 678"
+                  inputMode="tel"
+                  pattern="(\+[\d\s().-]{8,17})|([92][\d\s().-]{8,})"
+                  title="912 345 678 (Portugal) ou + e indicativo do país para números estrangeiros"
+                  placeholder="912 345 678"
                   autoComplete="tel"
                   defaultValue={clientDetails?.telefone}
                   className="mt-1.5"

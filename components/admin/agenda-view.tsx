@@ -189,7 +189,7 @@ export function AgendaView({
             </div>
             <div>
               <Label htmlFor="ag-telefone">Telefone *</Label>
-              <Input id="ag-telefone" name="telefone" type="tel" required placeholder="+351 912 345 678" className="mt-1.5" />
+              <Input id="ag-telefone" name="telefone" type="tel" required inputMode="tel" pattern="(\+[\d\s().-]{8,17})|([92][\d\s().-]{8,})" title="912 345 678 (Portugal) ou +indicativo" placeholder="912 345 678" className="mt-1.5" />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">

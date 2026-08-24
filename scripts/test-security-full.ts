@@ -42,6 +42,20 @@ async function main() {
     await new Promise((r) => setTimeout(r, 1500));
   }
 
+  // Auto-limpeza: remover marcações de runs anteriores deste script
+  // (para os slots de +9d/+11d estarem livres).
+  await prisma.appointment.deleteMany({
+    where: { client: { name: { in: ["Vitima Teste", "Vitima Secreta", "Mass Assign", "<script>alert(1)</script>"] } } },
+  });
+  await prisma.client.deleteMany({
+    where: { name: { in: ["Vitima Teste", "Vitima Secreta", "Mass Assign", "<script>alert(1)</script>"] } },
+  });
+
+  // Cooldown: o proprio script faz 20 logins falhados no fim (rate limit
+  // por email dura 60s) — aguardar antes de comecar se correr em sequencia.
+  console.log("cooldown inicial 65s (rate limit de logins anteriores)...");
+  await new Promise((r) => setTimeout(r, 65_000));
+
   // ── Fixtures ─────────────────────────────────────────────
   const bizA = await prisma.business.findFirstOrThrow();
 

@@ -4,6 +4,7 @@ import { isSameOrigin } from "@/lib/auth";
 import { clientIpFrom, rateLimit } from "@/lib/rate-limit";
 import { queueNotification } from "@/lib/notifications";
 import { normalizePhone, piiLookupHash } from "@/lib/crypto";
+import { phoneSchema } from "@/lib/validation";
 import { z } from "zod";
 
 const bookingSchema = z.object({
@@ -11,10 +12,7 @@ const bookingSchema = z.object({
   colaborador: z.string().optional(),
   inicio: z.string().datetime(),
   nome: z.string().trim().min(2).max(120),
-  telefone: z
-    .string()
-    .trim()
-    .regex(/^[+\d][\d\s().-]{7,19}$/, "Telefone inválido"),
+  telefone: phoneSchema,
   notas: z.string().trim().max(500).optional(),
   consentimentoMarketing: z.boolean().optional(),
   consentimentoRGPD: z.literal(true),
