@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Nota: as migrações da base de dados NÃO correm no deploy automático.
+# Aplicar com `npx prisma migrate deploy` (local ou CI) antes de promover
+# tráfego — ver docs/DEPLOY.md.

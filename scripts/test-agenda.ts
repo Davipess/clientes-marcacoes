@@ -80,7 +80,7 @@ async function main() {
       servicos: [svc.id],
       inicio: wallToIso(todayIso, "17:00", "Europe/Lisbon"),
       nome: "Walk-in Teste",
-      email: "walkin@example.pt",
+      telefone: "+351 962 345 678",
     }),
   });
   const mj = await manual.json();
