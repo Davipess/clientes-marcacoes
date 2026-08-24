@@ -41,6 +41,9 @@ async function main() {
     } catch { /* wait */ }
     await new Promise((r) => setTimeout(r, 1500));
   }
+  // Cooldown: suites anteriores saturam o rate limit de marcacoes (60s).
+  console.log("cooldown 65s (rate limits de runs anteriores)...");
+  await new Promise((r) => setTimeout(r, 65_000));
 
   // Clean slate.
   await prisma.appointment.deleteMany({});
