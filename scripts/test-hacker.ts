@@ -12,7 +12,7 @@ const BASE = "http://localhost:3000";
 const ORIGIN = { Origin: BASE };
 
 let attempts = 0;
-let phonesFound: string[] = [];
+const phonesFound: string[] = [];
 
 function scan(label: string, text: string | null) {
   attempts++;
@@ -48,7 +48,6 @@ const victimPhone2 = "960333444"; // SEGUNDA vitima - o atacante NAO sabe este n
   // Slot futuro em dia útil.
   const day = new Date(Date.now() + 6 * 86_400_000);
   while (day.getUTCDay() === 0 || day.getUTCDay() === 6) day.setUTCDate(day.getUTCDate() + 1);
-  const dateStr = day.toISOString().slice(0, 10);
   const guess = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 10, 0);
   const dtf = new Intl.DateTimeFormat("en-US", {
     timeZone: business.timezone, hour12: false, year: "numeric", month: "2-digit",
