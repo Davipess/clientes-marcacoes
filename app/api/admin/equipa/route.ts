@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/db";
+﻿﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { hashPassword } from "@/lib/crypto";
 import { emailSchema, passwordSchema } from "@/lib/validation";
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: parsed.error.issues[0]?.message ?? "Dados invÃ¡lidos." },
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
       { status: 400 },
     );
   }
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     },
   });
   if (duplicate) {
-    return Response.json({ error: "Esse email jÃ¡ estÃ¡ em uso." }, { status: 409 });
+    return Response.json({ error: "Esse email já está em uso." }, { status: 409 });
   }
 
   const user = await prisma.user.create({
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     },
   });
 
-  // Default schedule Mon-Fri 09:00â€“18:00; admin can adjust later.
+  // Default schedule Mon-Fri 09:00–18:00; admin can adjust later.
   await prisma.workSchedule.createMany({
     data: [1, 2, 3, 4, 5].map((weekday) => ({
       staffId: staff.id,
@@ -111,7 +111,7 @@ export async function PATCH(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = toggleSchema.safeParse(body);
   if (!parsed.success) {
-    return Response.json({ error: "Dados invÃ¡lidos." }, { status: 400 });
+    return Response.json({ error: "Dados inválidos." }, { status: 400 });
   }
   const { staffId, active } = parsed.data;
 
@@ -119,7 +119,7 @@ export async function PATCH(request: Request) {
     where: { id: staffId, businessId: guard.businessId },
   });
   if (!staff) {
-    return Response.json({ error: "TÃ©cnica nÃ£o encontrada." }, { status: 404 });
+    return Response.json({ error: "Técnica não encontrada." }, { status: 404 });
   }
 
   if (!active) {
@@ -128,7 +128,7 @@ export async function PATCH(request: Request) {
     });
     if (activeCount <= 1) {
       return Response.json(
-        { error: "Tem de existir pelo menos uma tÃ©cnica ativa." },
+        { error: "Tem de existir pelo menos uma técnica ativa." },
         { status: 400 },
       );
     }

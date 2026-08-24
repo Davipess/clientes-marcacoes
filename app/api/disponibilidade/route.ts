@@ -11,7 +11,8 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const servicos = url.searchParams.getAll("servico").filter(Boolean);
   const colaborador = url.searchParams.get("colaborador") ?? undefined;
-  const dias = Number(url.searchParams.get("dias") ?? 14);
+  const rawDias = Number(url.searchParams.get("dias") ?? 14);
+  const dias = Number.isFinite(rawDias) ? rawDias : 14;
 
   if (servicos.length === 0) {
     return Response.json({ error: "Indique pelo menos um serviço." }, { status: 400 });

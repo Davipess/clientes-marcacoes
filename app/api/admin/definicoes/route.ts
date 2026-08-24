@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/db";
+﻿﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { z } from "zod";
 import { audit } from "@/lib/audit";
@@ -38,7 +38,7 @@ export async function PATCH(request: Request) {
   const parsed = settingsSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: parsed.error.issues[0]?.message ?? "Dados invÃ¡lidos." },
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
       { status: 400 },
     );
   }
@@ -49,7 +49,7 @@ export async function PATCH(request: Request) {
     for (const iv of data.openingHours[day] ?? []) {
       if (iv.open >= iv.close) {
         return Response.json(
-          { error: "A hora de abertura deve ser anterior Ã  de fecho." },
+          { error: "A hora de abertura deve ser anterior à de fecho." },
           { status: 400 },
         );
       }

@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/db";
+﻿﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { z } from "zod";
 import { audit } from "@/lib/audit";
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   const parsed = serviceSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: parsed.error.issues[0]?.message ?? "Dados invÃ¡lidos." },
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
       { status: 400 },
     );
   }
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     where: { id: parsed.data.categoryId, businessId: guard.businessId },
   });
   if (!category) {
-    return Response.json({ error: "Categoria invÃ¡lida." }, { status: 400 });
+    return Response.json({ error: "Categoria inválida." }, { status: 400 });
   }
 
   const { imageUrl, ...data } = parsed.data;
@@ -73,7 +73,7 @@ export async function PATCH(request: Request) {
   const parsed = serviceUpdateSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: parsed.error.issues[0]?.message ?? "Dados invÃ¡lidos." },
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
       { status: 400 },
     );
   }
@@ -84,7 +84,7 @@ export async function PATCH(request: Request) {
       where: { id: categoryId, businessId: guard.businessId },
     });
     if (!category) {
-      return Response.json({ error: "Categoria invÃ¡lida." }, { status: 400 });
+      return Response.json({ error: "Categoria inválida." }, { status: 400 });
     }
   }
 

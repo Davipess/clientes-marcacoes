@@ -29,6 +29,13 @@ async function main() {
   const manicure = services.find((s) => s.name === "Manicure")!;
   const pedicure = services.find((s) => s.name === "Pedicure")!;
 
+  // Pin one staff member so conflict tests are deterministic (multiple
+  // technicians exist in this database).
+  const anaStaff = await prisma.staff.findFirstOrThrow({
+    where: { user: { email: "ana@salaoexemplo.pt" } },
+    select: { id: true },
+  });
+
   // ── Clean slate for deterministic tests ──────────────────────
   await prisma.appointment.deleteMany({ where: { businessId: business.id } });
 
@@ -36,6 +43,7 @@ async function main() {
   const avail = await getAvailableSlots({
     businessId: business.id,
     serviceIds: [manicure.id],
+    staffId: anaStaff.id,
     days: 7,
   });
   assert(avail.totalDurationMin === manicure.durationMin, "duração total = manicure");
@@ -79,6 +87,7 @@ async function main() {
   const booking = await createAppointment({
     businessId: business.id,
     serviceIds: [manicure.id],
+    staffId: anaStaff.id,
     startAt: slotStart,
     client: {
       name: "Cliente Teste",
@@ -93,6 +102,7 @@ async function main() {
   const availNow = await getAvailableSlots({
     businessId: business.id,
     serviceIds: [manicure.id],
+    staffId: anaStaff.id,
     days: 7,
   });
   const raceDay = availNow.days[0];
@@ -105,12 +115,14 @@ async function main() {
     createAppointment({
       businessId: business.id,
       serviceIds: [manicure.id],
+      staffId: anaStaff.id,
       startAt: nextSlot,
       client: { name: "Cliente A", phone: "+351 911 111 111", gdprConsent: true },
     }),
     createAppointment({
       businessId: business.id,
       serviceIds: [manicure.id],
+      staffId: anaStaff.id,
       startAt: nextSlot,
       client: { name: "Cliente B", phone: "+351 922 222 222", gdprConsent: true },
     }),
@@ -126,6 +138,7 @@ async function main() {
   const multiAvail = await getAvailableSlots({
     businessId: business.id,
     serviceIds: [manicure.id, pedicure.id],
+    staffId: anaStaff.id,
     days: 7,
   });
   assert(multiAvail.days.length > 0, "slots para manicure+pedicure");
@@ -160,6 +173,7 @@ async function main() {
   const multiBooking = await createAppointment({
     businessId: business.id,
     serviceIds: [manicure.id, pedicure.id],
+    staffId: anaStaff.id,
     startAt: multiStart,
     client: { name: "Cliente Multi", phone: "+351 933 333 333", gdprConsent: true },
   });
@@ -192,9 +206,9 @@ async function main() {
       status: "CONFIRMED",
     },
   });
-  const clientCancelSoon = await cancelAppointment(apptSoon.id, undefined, true);
+  const clientCancelSoon = await cancelAppointment(apptSoon.id, business.id, undefined, true);
   assert(!clientCancelSoon.ok && clientCancelSoon.code === "POLICY", "cliente NÃO pode cancelar dentro da janela");
-  const adminCancel = await cancelAppointment(apptSoon.id, "Walk-in");
+  const adminCancel = await cancelAppointment(apptSoon.id, business.id, "Walk-in");
   assert(adminCancel.ok, "admin pode sempre cancelar");
 
   const apptFar = await prisma.appointment.create({
@@ -207,7 +221,7 @@ async function main() {
       status: "CONFIRMED",
     },
   });
-  const clientCancelFar = await cancelAppointment(apptFar.id, undefined, true);
+  const clientCancelFar = await cancelAppointment(apptFar.id, business.id, undefined, true);
   assert(clientCancelFar.ok, "cliente pode cancelar fora da janela");
 
   console.log("\n[6] Reagendamento");
@@ -222,6 +236,7 @@ async function main() {
   const availAfter = await getAvailableSlots({
     businessId: business.id,
     serviceIds: [manicure.id],
+    staffId: anaStaff.id,
     days: 7,
   });
   const freeDay = availAfter.days[0];

@@ -1,4 +1,4 @@
-import "dotenv/config";
+﻿import "dotenv/config";
 
 const BASE = "http://localhost:3000";
 const ORIGIN = { Origin: BASE };
@@ -58,6 +58,10 @@ async function main() {
       maxLeadDays: 60,
       cancellationWindowHours: 24,
       cancellationPolicyText: "Pode cancelar ou alterar gratuitamente até 24 horas antes.",
+      maxActiveBookingsPerPhone: 3,
+      maxBookingsPerPhonePerDay: 3,
+      noShowFlagThreshold: 2,
+      retentionMonths: 24,
     }),
   });
   console.log("PATCH definicoes:", settingsRes.status);

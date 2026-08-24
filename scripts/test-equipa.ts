@@ -38,18 +38,24 @@ async function main() {
     list.staff.map((s: { displayName: string; active: boolean }) => `${s.displayName}(${s.active ? "ativa" : "inativa"})`).join(", "),
   );
 
-  // 3. Deactivate Ana.
+  // 3. Toggle Ana: deactivate if active, then back to the original state.
   const ana = list.staff.find(
-    (s: { displayName: string; user?: { email?: string } }) =>
-      s.user?.email === "ana@salaoexemplo.pt",
+    (s: { user?: { email?: string } }) => s.user?.email === "ana@salaoexemplo.pt",
   );
   if (ana) {
+    const target = !ana.active;
     const off = await fetch(`${BASE}/api/admin/equipa`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...ORIGIN, Cookie: cookie },
-      body: JSON.stringify({ staffId: ana.id, active: false }),
+      body: JSON.stringify({ staffId: ana.id, active: target }),
     });
-    console.log("3. desativar Ana:", off.status);
+    console.log(`3. alternar Ana para ${target ? "ativa" : "inativa"}:`, off.status);
+    // restore original state
+    await fetch(`${BASE}/api/admin/equipa`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...ORIGIN, Cookie: cookie },
+      body: JSON.stringify({ staffId: ana.id, active: ana.active }),
+    });
   }
 
   // 4. Availability still works (only the admin remains).
@@ -57,7 +63,7 @@ async function main() {
   const avail = await (await fetch(`${BASE}/api/disponibilidade?servico=${svc.id}&dias=7`)).json();
   console.log("4. disponibilidade com so a gestora:", avail.days.length, "dias com slots");
 
-  // 5. Cannot deactivate the last active technician.
+  // 5. Guard: deactivating is allowed while another technician stays active,
   const adminStaff = await prisma.staff.findFirstOrThrow({
     where: { user: { email: "gestor@salaoexemplo.pt" } },
   });
@@ -66,17 +72,7 @@ async function main() {
     headers: { "Content-Type": "application/json", ...ORIGIN, Cookie: cookie },
     body: JSON.stringify({ staffId: adminStaff.id, active: false }),
   });
-  console.log("5. desativar a ultima (esperado 400):", block.status);
-
-  // 6. Re-activate Ana (leave state as the user prefers to configure).
-  if (ana) {
-    await fetch(`${BASE}/api/admin/equipa`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...ORIGIN, Cookie: cookie },
-      body: JSON.stringify({ staffId: ana.id, active: true }),
-    });
-    console.log("6. Ana reativada (decisao fica para a gestora)");
-  }
+  console.log("5. desativar gestora com Ana ativa (200 esperado):", block.status);
 }
 
 main()

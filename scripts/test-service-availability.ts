@@ -27,7 +27,7 @@ async function main() {
     method: "POST",
     headers: { ...ORIGIN, Cookie: cookie },
   });
-  console.log("1. modo individual:", solo.status);
+  console.log("1. modo individual (201 novo / 409 ja existe):", solo.status);
 
   // 2. Create a brand-new service.
   const cat = await prisma.serviceCategory.findFirstOrThrow();
@@ -57,10 +57,15 @@ async function main() {
   });
   console.log("4. tecnicas associadas:", links);
 
-  // 5. Cleanup.
-  await prisma.serviceStaff.deleteMany({ where: { serviceId: created.id } });
-  await prisma.service.delete({ where: { id: created.id } });
-  console.log("5. limpeza ok");
+  // 5. Cleanup — guarded: an undefined id would make Prisma ignore the
+  // filter and wipe ALL rows. Never run cleanup on a failed create.
+  if (created.id) {
+    await prisma.serviceStaff.deleteMany({ where: { serviceId: created.id } });
+    await prisma.service.delete({ where: { id: created.id } });
+    console.log("5. limpeza ok");
+  } else {
+    console.log("5. limpeza ignorada (servico nao foi criado)");
+  }
 }
 
 main()

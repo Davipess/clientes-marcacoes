@@ -1,3 +1,4 @@
+import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { parseHHMM } from "./time";
 
@@ -18,14 +19,19 @@ const ACTIVE_STATUSES = ["PENDING", "CONFIRMED"] as const;
 /**
  * Cancels an appointment. When `byClient` is true the cancellation policy
  * window is enforced; admins/staff can always cancel.
+ * `businessId` scopes the lookup — required for all admin/staff callers.
  */
 export async function cancelAppointment(
   appointmentId: string,
+  businessId: string | null,
   reason?: string,
   byClient = false,
 ): Promise<CancelResult> {
-  const appointment = await prisma.appointment.findUnique({
-    where: { id: appointmentId },
+  const appointment = await prisma.appointment.findFirst({
+    where: {
+      id: appointmentId,
+      ...(businessId ? { businessId } : {}),
+    },
     include: { business: { include: { settings: true } } },
   });
 
@@ -122,37 +128,63 @@ export async function rescheduleAppointment(
     return { ok: false, code: "INVALID", message: "Configuração em falta." };
   }
 
-  // Validate against availability, excluding this appointment itself.
-  const available = await validateSlotExcludingSelf(
-    appointment.businessId,
-    appointment.staffId,
-    newStartAt,
-    totalDurationMin,
-    appointment.id,
-    settings.bufferMinutes,
-    settings.minLeadHours,
-    settings.maxLeadDays,
-  );
-
-  if (!available.ok) {
-    return {
-      ok: false,
-      code: "SLOT_TAKEN",
-      message: "O novo horário não está disponível.",
-    };
+  // Validate + write inside a serializable transaction: two concurrent
+  // reschedules (or a reschedule racing a new booking) cannot double-book.
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        const ok = await validateSlotExcludingSelfTx(
+          tx,
+          appointment.businessId,
+          appointment.staffId,
+          newStartAt,
+          totalDurationMin,
+          appointment.id,
+          settings.bufferMinutes,
+          settings.minLeadHours,
+          settings.maxLeadDays,
+        );
+        if (!ok) throw new Error("__slot_taken__");
+        await tx.appointment.update({
+          where: { id: appointmentId },
+          data: { startAt: newStartAt, endAt: newEndAt },
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  } catch (error) {
+    if (isSlotConflictError(error)) {
+      return {
+        ok: false,
+        code: "SLOT_TAKEN",
+        message: "O novo horário não está disponível.",
+      };
+    }
+    throw error;
   }
-
-  await prisma.appointment.update({
-    where: { id: appointmentId },
-    data: { startAt: newStartAt, endAt: newEndAt },
-  });
 
   return { ok: true };
 }
 
+/** Serialization conflicts (Postgres 40001 / Prisma P2034) + local sentinel. */
+function isSlotConflictError(error: unknown): boolean {
+  const message = String((error as { message?: string })?.message ?? "");
+  return (
+    message.includes("__slot_taken__") ||
+    (error as { cause?: { originalCode?: string } })?.cause?.originalCode ===
+      "40001" ||
+    message.includes("could not serialize") ||
+    (error as { code?: string })?.code === "P2034"
+  );
+}
+
 // Reuses the same validation core as creation but scoped to one staff member
-// and excluding the appointment being moved.
-async function validateSlotExcludingSelf(
+// and excluding the appointment being moved. Runs inside the caller's
+// transaction (tx) so the final write is serialized against competitors.
+type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+async function validateSlotExcludingSelfTx(
+  tx: TxClient,
   businessId: string,
   staffId: string,
   startAt: Date,
@@ -161,15 +193,15 @@ async function validateSlotExcludingSelf(
   bufferMinutes: number,
   minLeadHours: number,
   maxLeadDays: number,
-): Promise<{ ok: boolean }> {
+): Promise<boolean> {
   const endAt = new Date(startAt.getTime() + durationMin * 60_000);
 
   const [staff, conflicts] = await Promise.all([
-    prisma.staff.findFirst({
+    tx.staff.findFirst({
       where: { id: staffId, active: true },
       include: { workSchedules: true },
     }),
-    prisma.appointment.findMany({
+    tx.appointment.findMany({
       where: {
         businessId,
         staffId,
@@ -182,12 +214,12 @@ async function validateSlotExcludingSelf(
     }),
   ]);
 
-  if (!staff || staff.workSchedules.length === 0) return { ok: false };
+  if (!staff || staff.workSchedules.length === 0) return false;
   if (startAt.getTime() < Date.now() + minLeadHours * 3_600_000) {
-    return { ok: false };
+    return false;
   }
   if (startAt.getTime() > Date.now() + maxLeadDays * 86_400_000) {
-    return { ok: false };
+    return false;
   }
 
   const bufferMs = bufferMinutes * 60_000;
@@ -196,10 +228,10 @@ async function validateSlotExcludingSelf(
       a.startAt.getTime() - bufferMs < endAt.getTime() &&
       startAt.getTime() < a.endAt.getTime() + bufferMs,
   );
-  if (overlapsConflicts) return { ok: false };
+  if (overlapsConflicts) return false;
 
   // Schedule fit (wall clock) + business opening hours.
-  const business = await prisma.business.findUniqueOrThrow({
+  const business = await tx.business.findUniqueOrThrow({
     where: { id: businessId },
     include: { settings: true },
   });
@@ -216,7 +248,7 @@ async function validateSlotExcludingSelf(
         parseHHMM(ws.startTime) <= startWall && endWall <= parseHHMM(ws.endTime),
     )
   ) {
-    return { ok: false };
+    return false;
   }
 
   const openingHours = business.settings?.openingHours as
@@ -227,14 +259,14 @@ async function validateSlotExcludingSelf(
   const fitsBusinessHours = businessWindows.some(
     (iv) => parseHHMM(iv.open) <= startWall && endWall <= parseHHMM(iv.close),
   );
-  if (!fitsBusinessHours) return { ok: false };
+  if (!fitsBusinessHours) return false;
 
   // Time-off / exceptions overlap check.
-  const blocks = await Promise.all([
-    prisma.timeOff.findMany({
+  const [timeOff, exceptions] = await Promise.all([
+    tx.timeOff.findMany({
       where: { staffId, endAt: { gt: startAt }, startAt: { lt: endAt } },
     }),
-    prisma.availabilityException.findMany({
+    tx.availabilityException.findMany({
       where: {
         businessId,
         OR: [{ staffId: null }, { staffId }],
@@ -243,12 +275,12 @@ async function validateSlotExcludingSelf(
       },
     }),
   ]);
-  const blocked = [...blocks[0], ...blocks[1]].some(
+  const blocked = [...timeOff, ...exceptions].some(
     (b) => b.startAt < endAt && startAt < b.endAt,
   );
-  if (blocked) return { ok: false };
+  if (blocked) return false;
 
-  return { ok: true };
+  return true;
 }
 
 function weekdayOf(date: Date, timeZone: string): number {

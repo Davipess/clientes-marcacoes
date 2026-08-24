@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { createAppointment } from "@/lib/booking/create-appointment";
 import { cancelAppointment } from "@/lib/booking/modify-appointment";
@@ -68,7 +68,7 @@ export async function PATCH(request: Request) {
   const { id, action } = parsed.data;
 
   if (action === "CANCEL") {
-    const result = await cancelAppointment(id, "Cancelada pelo salão");
+    const result = await cancelAppointment(id, guard.businessId, "Cancelada pelo salão");
     if (!result.ok) {
       return Response.json({ error: result.message }, { status: 400 });
     }
