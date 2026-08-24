@@ -38,6 +38,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false, // não revelar a stack em respostas
   async headers() {
     return [
       {
