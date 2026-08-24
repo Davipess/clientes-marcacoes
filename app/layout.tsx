@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
+import { prisma } from "@/lib/db";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,29 +18,40 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Salão Exemplo — Marcações Online",
-    template: "%s — Salão Exemplo",
-  },
-  description:
-    "Marque o seu serviço de nail art e beleza online, de forma rápida e simples. Escolha serviços, profissional e horário em menos de um minuto.",
-  keywords: [
-    "marcações online",
-    "salão de beleza",
-    "manicure",
-    "pedicure",
-    "nail art",
-    "Lisboa",
-  ],
-  openGraph: {
-    title: "Salão Exemplo — Marcações Online",
-    description:
-      "Marque o seu serviço de beleza online em menos de um minuto.",
-    locale: "pt_PT",
-    type: "website",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const business = await prisma.business.findFirst({
+    select: {
+      name: true,
+      address: true,
+      logoUrl: true,
+      settings: { select: { siteContent: true } },
+    },
+  });
+
+  const name = business?.name ?? "Marcações Online";
+  const content = (business?.settings?.siteContent ?? {}) as {
+    heroSubtitle?: string;
+  };
+  const description =
+    content.heroSubtitle ??
+    `Marque o seu serviço em ${name} online, de forma rápida e simples.`;
+
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+    title: {
+      default: `${name} — Marcações Online`,
+      template: `%s — ${name}`,
+    },
+    description,
+    icons: business?.logoUrl ? [{ rel: "icon", url: business.logoUrl }] : undefined,
+    openGraph: {
+      title: `${name} — Marcações Online`,
+      description,
+      locale: "pt_PT",
+      type: "website",
+    },
+  };
+}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

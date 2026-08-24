@@ -16,6 +16,7 @@ export default async function HomePage() {
     );
   }
 
+  const content = data.business.siteContent;
   const featured = data.categories
     .flatMap((c) => c.services)
     .slice(0, 4);
@@ -30,16 +31,15 @@ export default async function HomePage() {
         />
         <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-20 text-center sm:pb-28 sm:pt-28">
           <span className="animate-fade-in rounded-full border border-primary/25 bg-card px-4 py-1 text-xs font-medium tracking-wide text-primary">
-            Marcações online, sem chamadas
+            {content.heroBadge}
           </span>
           <h1 className="animate-rise-in mt-6 max-w-2xl font-heading text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl [animation-delay:100ms]">
-            As suas unhas,
+            {content.heroTitle}
             <br />
-            <span className="text-primary">ao seu tempo.</span>
+            <span className="text-primary">{content.heroTitleHighlight}</span>
           </h1>
           <p className="animate-rise-in mt-5 max-w-xl text-base text-muted-foreground sm:text-lg [animation-delay:200ms]">
-            Escolha os seus serviços, o melhor horário e confirme em menos de
-            um minuto. Simples, rápido e sem esperas.
+            {content.heroSubtitle}
           </p>
           <div className="animate-rise-in mt-8 flex flex-col gap-3 [animation-delay:300ms] sm:flex-row">
             <Link
@@ -91,21 +91,13 @@ export default async function HomePage() {
       {/* About / trust */}
       <section className="border-y border-border/60 bg-card/60">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <Reveal className="grid gap-10 sm:grid-cols-3">
-            {[
-              {
-                title: "Profissionalismo",
-                text: "Técnicas atualizadas e produtos de qualidade, num ambiente acolhedor.",
-              },
-              {
-                title: "À sua medida",
-                text: "Combine vários serviços numa só visita — manicure e pedicure juntas.",
-              },
-              {
-                title: "Sem complicações",
-                text: "Marcação online em segundos. Confirmação imediata por email.",
-              },
-            ].map((item) => (
+          <Reveal>
+            <h2 className="reveal font-heading text-2xl font-semibold sm:text-3xl">
+              {content.aboutTitle}
+            </h2>
+          </Reveal>
+          <Reveal className="stagger mt-10 grid gap-10 sm:grid-cols-3">
+            {content.about.map((item) => (
               <div key={item.title} className="reveal">
                 <h3 className="font-heading text-lg font-semibold text-primary">
                   {item.title}
@@ -154,10 +146,10 @@ export default async function HomePage() {
         <Reveal>
           <div className="reveal rounded-3xl bg-gradient-to-br from-primary to-primary/80 px-6 py-14 text-center shadow-xl shadow-primary/15 sm:px-12">
             <h2 className="font-heading text-2xl font-semibold text-primary-foreground sm:text-3xl">
-              Pronta para mimar-se?
+              {content.ctaTitle}
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm text-primary-foreground/85 sm:text-base">
-              Reserve o seu momento. Pagamento efetuado no local.
+              {content.ctaSubtitle}
             </p>
             <Link
               href="/marcar"

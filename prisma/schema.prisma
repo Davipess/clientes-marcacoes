@@ -62,6 +62,12 @@ model BusinessSettings {
   noShowFlagThreshold       Int @default(2) // no-shows before the "at risk" badge
   retentionMonths           Int @default(24) // final-state appointment cleanup age
 
+  // ── Editable site copy (white-label) ──
+  // Keys with fallbacks in code; owner edits everything in the admin.
+  // Shape: { heroTitle, heroSubtitle, heroBadge, aboutTitle, about: [{title,text}],
+  //          ctaTitle, ctaSubtitle }
+  siteContent Json?
+
   @@map("business_settings")
 }
 

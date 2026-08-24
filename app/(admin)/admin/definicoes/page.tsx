@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { PasswordChange } from "@/components/password-change";
+import { SiteContentEditor } from "@/components/admin/site-content-editor";
+import { parseSiteContent } from "@/lib/public-data";
 
 export const metadata: Metadata = { title: "Definições — Administração" };
 
@@ -87,6 +89,8 @@ export default async function AdminDefinicoesPage() {
           })),
         }}
       />
+
+      <SiteContentEditor initial={parseSiteContent(business.settings?.siteContent)} />
 
       <section className="mt-8 rounded-2xl border border-border/70 bg-card p-5">
         <h2 className="font-heading text-lg font-semibold">Palavra-passe</h2>
