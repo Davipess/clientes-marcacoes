@@ -18,9 +18,27 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Salão Exemplo — Marcações Online",
+  title: {
+    default: "Salão Exemplo — Marcações Online",
+    template: "%s — Salão Exemplo",
+  },
   description:
-    "Marque o seu serviço de nail art e beleza online, de forma rápida e simples.",
+    "Marque o seu serviço de nail art e beleza online, de forma rápida e simples. Escolha serviços, profissional e horário em menos de um minuto.",
+  keywords: [
+    "marcações online",
+    "salão de beleza",
+    "manicure",
+    "pedicure",
+    "nail art",
+    "Lisboa",
+  ],
+  openGraph: {
+    title: "Salão Exemplo — Marcações Online",
+    description:
+      "Marque o seu serviço de beleza online em menos de um minuto.",
+    locale: "pt_PT",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

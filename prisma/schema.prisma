@@ -348,3 +348,16 @@ model Image {
 
   @@map("images")
 }
+
+// Audit trail for sensitive admin/staff actions.
+model AuditLog {
+  id         String   @id @default(cuid())
+  businessId String?
+  actorEmail String
+  action     String // e.g. "service.create", "staff.create", "settings.update"
+  detail     String?
+  createdAt  DateTime @default(now())
+
+  @@index([businessId, createdAt])
+  @@map("audit_logs")
+}

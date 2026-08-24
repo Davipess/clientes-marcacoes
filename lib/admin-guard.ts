@@ -2,7 +2,7 @@ import { getAuthUser, isSameOrigin } from "@/lib/auth";
 import { Role } from "@/lib/generated/prisma/client";
 
 export type AdminGuardResult =
-  | { ok: true; businessId: string; userId: string }
+  | { ok: true; businessId: string; userId: string; email: string }
   | { ok: false; response: Response };
 
 /** Guard for /api/admin/* routes: ADMIN session (+ same-origin for mutations). */
@@ -21,5 +21,10 @@ export async function requireAdmin(request: Request): Promise<AdminGuardResult> 
       response: Response.json({ error: "Não autorizado" }, { status: 401 }),
     };
   }
-  return { ok: true, businessId: user.businessId, userId: user.id };
+  return {
+    ok: true,
+    businessId: user.businessId,
+    userId: user.id,
+    email: user.email,
+  };
 }

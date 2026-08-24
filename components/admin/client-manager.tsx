@@ -20,6 +20,29 @@ export function ClientManager({ clients }: { clients: ClientItem[] }) {
   const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+
+  async function anonymize(client: ClientItem) {
+    if (pendingDelete !== client.id) {
+      setPendingDelete(client.id);
+      return;
+    }
+    setPendingDelete(null);
+    setSavingId(client.id);
+    try {
+      const res = await fetch("/api/admin/clientes", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: client.id }),
+      });
+      if (res.ok) {
+        // Remove from the list; the row stays in the DB anonymized.
+        window.location.reload();
+      }
+    } finally {
+      setSavingId(null);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -117,6 +140,22 @@ export function ClientManager({ clients }: { clients: ClientItem[] }) {
                   onClick={() => saveNotes(client.id)}
                 >
                   {savingId === client.id ? "A guardar..." : "Guardar notas"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className={`rounded-full ${
+                    pendingDelete === client.id
+                      ? "bg-destructive text-white hover:bg-destructive"
+                      : "text-destructive hover:text-destructive"
+                  }`}
+                  disabled={savingId === client.id}
+                  onClick={() => anonymize(client)}
+                >
+                  {pendingDelete === client.id
+                    ? "Confirmar anonimização?"
+                    : "Anonimizar (RGPD)"}
                 </Button>
                 {savedId === client.id && (
                   <span className="animate-fade-in text-xs text-green-700">

@@ -1,11 +1,11 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { Metadata } from "next";
 import { getPublicData } from "@/lib/public-data";
 import { formatEuros } from "@/lib/format";
 import { Reveal } from "@/components/site/reveal";
 
 export const metadata: Metadata = {
-  title: "Serviços — Salão Exemplo",
+  title: "Serviços",
   description: "Veja os serviços, preços e durações disponíveis.",
 };
 

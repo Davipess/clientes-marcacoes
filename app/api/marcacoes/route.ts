@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { createAppointment } from "@/lib/booking/create-appointment";
 import { isSameOrigin } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
+import { queueNotification } from "@/lib/notifications";
 import { z } from "zod";
 
 const bookingSchema = z.object({
@@ -64,7 +65,16 @@ export async function POST(request: Request) {
     return Response.json({ error: result.message, code: result.code }, { status });
   }
 
-  // Phase 7 will send the confirmation email here (via NotificationLog queue).
+  // Phase 7: confirmation notification queued (delivery channel pending —
+  // see lib/notifications.ts).
+  await queueNotification({
+    businessId: business.id,
+    appointmentId: result.appointmentId,
+    type: "BOOKING_CONFIRMATION",
+    recipient: parsed.data.telefone,
+    message: `Marcação confirmada para ${parsed.data.nome}`,
+  });
+
   return Response.json(
     { ok: true, marcacaoId: result.appointmentId },
     { status: 201 },

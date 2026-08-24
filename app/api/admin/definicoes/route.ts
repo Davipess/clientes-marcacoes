@@ -1,6 +1,7 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { z } from "zod";
+import { audit } from "@/lib/audit";
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
@@ -33,7 +34,7 @@ export async function PATCH(request: Request) {
   const parsed = settingsSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
+      { error: parsed.error.issues[0]?.message ?? "Dados invÃ¡lidos." },
       { status: 400 },
     );
   }
@@ -44,7 +45,7 @@ export async function PATCH(request: Request) {
     for (const iv of data.openingHours[day] ?? []) {
       if (iv.open >= iv.close) {
         return Response.json(
-          { error: "A hora de abertura deve ser anterior à de fecho." },
+          { error: "A hora de abertura deve ser anterior Ã  de fecho." },
           { status: 400 },
         );
       }
@@ -82,5 +83,6 @@ export async function PATCH(request: Request) {
     }),
   ]);
 
+  await audit(guard.businessId, guard.email, "settings.update");
   return Response.json({ ok: true });
 }

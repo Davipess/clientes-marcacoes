@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { getPublicData } from "@/lib/public-data";
 import { BookingWizard } from "@/components/booking/wizard";
 
 export const metadata: Metadata = {
-  title: "Marcar — Salão Exemplo",
+  title: "Marcar Online",
   description: "Marque o seu serviço online em menos de um minuto.",
 };
 

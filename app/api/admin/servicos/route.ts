@@ -1,6 +1,7 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { z } from "zod";
+import { audit } from "@/lib/audit";
 
 const serviceSchema = z.object({
   categoryId: z.string().min(1),
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
   const parsed = serviceSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
+      { error: parsed.error.issues[0]?.message ?? "Dados invÃ¡lidos." },
       { status: 400 },
     );
   }
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     where: { id: parsed.data.categoryId, businessId: guard.businessId },
   });
   if (!category) {
-    return Response.json({ error: "Categoria inválida." }, { status: 400 });
+    return Response.json({ error: "Categoria invÃ¡lida." }, { status: 400 });
   }
 
   const { imageUrl, ...data } = parsed.data;
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
     });
   }
 
+  await audit(guard.businessId, guard.email, 'service.create', parsed.data.name);
   return Response.json({ ok: true, id: service.id }, { status: 201 });
 }
 
@@ -71,7 +73,7 @@ export async function PATCH(request: Request) {
   const parsed = serviceUpdateSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
+      { error: parsed.error.issues[0]?.message ?? "Dados invÃ¡lidos." },
       { status: 400 },
     );
   }
@@ -82,7 +84,7 @@ export async function PATCH(request: Request) {
       where: { id: categoryId, businessId: guard.businessId },
     });
     if (!category) {
-      return Response.json({ error: "Categoria inválida." }, { status: 400 });
+      return Response.json({ error: "Categoria invÃ¡lida." }, { status: 400 });
     }
   }
 
@@ -109,6 +111,7 @@ export async function PATCH(request: Request) {
     }
   }
 
+  await audit(guard.businessId, guard.email, "service.update", id);
   return Response.json({ ok: true });
 }
 
@@ -125,5 +128,6 @@ export async function DELETE(request: Request) {
     where: { id, businessId: guard.businessId },
     data: { archived: true },
   });
+  await audit(guard.businessId, guard.email, "service.archive", id);
   return Response.json({ ok: true });
 }

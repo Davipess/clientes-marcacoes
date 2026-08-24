@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { getPublicData } from "@/lib/public-data";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade — Salão Exemplo",
+  title: "Política de Privacidade",
 };
 
 export default async function PrivacidadePage() {
