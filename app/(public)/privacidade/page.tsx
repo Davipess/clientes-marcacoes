@@ -26,9 +26,9 @@ export default async function PrivacidadePage() {
           <h2 className="font-medium text-foreground">Dados recolhidos</h2>
           <p className="mt-1">
             Ao efetuar uma marcação, recolhemos o seu nome e telefone
-            (necessários para gerir a marcação) e, se os fornecer, o seu email
-            (para enviar confirmações) e notas que escreva. Os seus contactos
-            são guardados de forma encriptada.
+            (necessários para gerir a marcação) e as notas que escreva, se
+            quiser. O seu número de telefone é guardado de forma encriptada e
+            é a única forma de identificação usada — sem contas nem palavras-passe.
           </p>
         </section>
         <section>

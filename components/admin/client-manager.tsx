@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 type ClientItem = {
   id: string;
   name: string;
-  email: string | null;
+  phone: string | null;
   notes: string;
   marketingConsent: boolean;
   visits: number;
@@ -27,7 +27,7 @@ export function ClientManager({ clients }: { clients: ClientItem[] }) {
     return clients.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q),
+        c.phone?.toLowerCase().includes(q),
     );
   }, [clients, search]);
 
@@ -83,7 +83,7 @@ export function ClientManager({ clients }: { clients: ClientItem[] }) {
               )}
             </div>
             <div className="mt-1 text-sm text-muted-foreground">
-              <p>{client.email}</p>
+              <p className="tabular-nums">{client.phone}</p>
               {client.lastVisit && (
                 <p className="mt-0.5 text-xs">
                   Última visita:{" "}

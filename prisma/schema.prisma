@@ -202,12 +202,12 @@ model Client {
   userId           String?   @unique // set if they created an account
   user             User?     @relation(fields: [userId], references: [id])
   name             String
+  // Phone is the sole client identifier (booking limits, no-show protection).
   // PII stored encrypted at rest (AES-256-GCM, key only in app env).
-  // Email is the primary contact (notifications); phone is optional.
-  emailEnc         String
-  emailHash        String
-  phoneEnc         String?
-  phoneHash        String?
+  phoneEnc         String
+  phoneHash        String
+  emailEnc         String? // optional, kept only if a client volunteers it
+  emailHash        String?
   notes            String? // admin-only internal notes
   marketingConsent Boolean   @default(false)
   gdprConsentAt    DateTime?
@@ -215,7 +215,7 @@ model Client {
   appointments Appointment[]
   reviews      Review[]
 
-  @@unique([businessId, emailHash]) // dedupe by email per business
+  @@unique([businessId, phoneHash]) // identity per business
   @@map("clients")
 }
 

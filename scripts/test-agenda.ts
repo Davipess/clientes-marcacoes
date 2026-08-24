@@ -43,7 +43,7 @@ async function main() {
       servicos: [svc.id],
       inicio,
       nome: "Ana Costa",
-      email: "ana.costa@example.pt",
+      telefone: "+351 961 234 567",
       consentimentoRGPD: true,
     }),
   });

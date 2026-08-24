@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -16,7 +16,7 @@ type AgendaAppointment = {
   source: string;
   notes: string;
   clientName: string;
-  clientEmail: string | null;
+  clientPhone: string | null;
   services: string[];
 };
 
@@ -98,7 +98,7 @@ export function AgendaView({
         servicos: formData.getAll("servicos"),
         inicio: wallToIso(date, time, timezone),
         nome: formData.get("nome"),
-        email: formData.get("email"),
+        telefone: formData.get("telefone"),
         notas: String(formData.get("notas")) || undefined,
       }),
     });
@@ -164,8 +164,8 @@ export function AgendaView({
               <Input id="ag-nome" name="nome" required minLength={2} className="mt-1.5" />
             </div>
             <div>
-              <Label htmlFor="ag-email">Email *</Label>
-              <Input id="ag-email" name="email" type="email" required className="mt-1.5" />
+              <Label htmlFor="ag-telefone">Telefone *</Label>
+              <Input id="ag-telefone" name="telefone" type="tel" required placeholder="+351 912 345 678" className="mt-1.5" />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -226,7 +226,7 @@ export function AgendaView({
                   <p className="font-medium">
                     {appt.clientName}
                     <span className="ml-2 text-xs font-normal text-muted-foreground">
-                      {appt.clientEmail}
+                      {appt.clientPhone}
                       {appt.source === "ADMIN" && " · manual"}
                     </span>
                   </p>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
@@ -57,7 +57,7 @@ export default async function AdminAgendaPage({
         startAt: { gte: dayStart, lt: dayEnd },
       },
       include: {
-        client: { select: { name: true, emailEnc: true } },
+        client: { select: { name: true, phoneEnc: true } },
         items: { select: { serviceName: true } },
       },
       orderBy: { startAt: "asc" },
@@ -91,7 +91,7 @@ export default async function AdminAgendaPage({
           source: a.source,
           notes: a.notes ?? "",
           clientName: a.client.name,
-          clientEmail: a.client.emailEnc ? decryptPii(a.client.emailEnc) : null,
+          clientPhone: a.client.phoneEnc ? decryptPii(a.client.phoneEnc) : null,
           services: a.items.map((i) => i.serviceName),
         }))}
       />

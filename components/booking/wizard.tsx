@@ -80,7 +80,7 @@ export function BookingWizard({
   const [done, setDone] = useState<{ id: string; when: string } | null>(null);
   const [clientDetails, setClientDetails] = useState<{
     nome: string;
-    email: string;
+    telefone: string;
     notas: string;
     marketing: boolean;
   } | null>(null);
@@ -146,7 +146,7 @@ export function BookingWizard({
       }
       setClientDetails({
         nome: String(data.get("nome") ?? ""),
-        email: String(data.get("email") ?? ""),
+        telefone: String(data.get("telefone") ?? ""),
         notas: String(data.get("notas") ?? ""),
         marketing: data.get("marketing") === "on",
       });
@@ -221,7 +221,7 @@ export function BookingWizard({
           colaborador: staffId ?? undefined,
           inicio: wallTimeToUtcIso(dateStr, timeStr, timezone),
           nome: clientDetails.nome,
-          email: clientDetails.email,
+          telefone: clientDetails.telefone,
           notas: clientDetails.notas || undefined,
           consentimentoMarketing: clientDetails.marketing,
           consentimentoRGPD: true,
@@ -535,10 +535,19 @@ export function BookingWizard({
                 <Input id="nome" name="nome" required minLength={2} autoComplete="name" defaultValue={clientDetails?.nome} className="mt-1.5" />
               </div>
               <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input id="email" name="email" type="email" required autoComplete="email" defaultValue={clientDetails?.email} className="mt-1.5" />
+                <Label htmlFor="telefone">Telefone *</Label>
+                <Input
+                  id="telefone"
+                  name="telefone"
+                  type="tel"
+                  required
+                  placeholder="+351 912 345 678"
+                  autoComplete="tel"
+                  defaultValue={clientDetails?.telefone}
+                  className="mt-1.5"
+                />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Para receber a confirmação e o lembrete da marcação.
+                  Para gerir a sua marcação. Nunca será partilhado.
                 </p>
               </div>
               <div>

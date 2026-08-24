@@ -13,8 +13,7 @@ export type CreateBookingInput = {
   bypassLeadTime?: boolean;
   client: {
     name: string;
-    email: string;
-    phone?: string;
+    phone: string;
     notes?: string;
     marketingConsent?: boolean;
     gdprConsent: boolean;
@@ -234,24 +233,15 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
           };
         }
 
-        // ── Upsert client by email hash (primary contact) ──────
-        const emailHash = piiLookupHash(input.client.email.toLowerCase());
-        const phoneHash = input.client.phone
-          ? piiLookupHash(normalizePhone(input.client.phone))
-          : null;
+        // ── Upsert client by phone hash (sole identifier) ──────
+        const phoneHash = piiLookupHash(normalizePhone(input.client.phone));
 
         const client = await tx.client.upsert({
           where: {
-            businessId_emailHash: { businessId: business.id, emailHash },
+            businessId_phoneHash: { businessId: business.id, phoneHash },
           },
           update: {
             name: input.client.name,
-            ...(phoneHash
-              ? {
-                  phoneEnc: encryptPii(input.client.phone!),
-                  phoneHash,
-                }
-              : {}),
             ...(input.client.gdprConsent ? { gdprConsentAt: new Date() } : {}),
             ...(input.client.marketingConsent === true
               ? { marketingConsent: true }
@@ -260,14 +250,8 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
           create: {
             businessId: business.id,
             name: input.client.name,
-            emailEnc: encryptPii(input.client.email),
-            emailHash,
-            ...(phoneHash
-              ? {
-                  phoneEnc: encryptPii(input.client.phone!),
-                  phoneHash,
-                }
-              : {}),
+            phoneEnc: encryptPii(input.client.phone),
+            phoneHash,
             marketingConsent: input.client.marketingConsent ?? false,
             gdprConsentAt: input.client.gdprConsent ? new Date() : null,
           },

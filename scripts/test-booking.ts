@@ -1,4 +1,4 @@
-import "dotenv/config";
+﻿import "dotenv/config";
 import { prisma } from "../lib/db";
 import { getAvailableSlots } from "../lib/booking/availability";
 import { createAppointment } from "../lib/booking/create-appointment";
@@ -82,7 +82,6 @@ async function main() {
     startAt: slotStart,
     client: {
       name: "Cliente Teste",
-      email: "teste@example.pt",
       phone: "+351 912 345 678",
       gdprConsent: true,
     },
@@ -107,13 +106,13 @@ async function main() {
       businessId: business.id,
       serviceIds: [manicure.id],
       startAt: nextSlot,
-      client: { name: "Cliente A", email: "cliente-a@example.pt", gdprConsent: true },
+      client: { name: "Cliente A", phone: "+351 911 111 111", gdprConsent: true },
     }),
     createAppointment({
       businessId: business.id,
       serviceIds: [manicure.id],
       startAt: nextSlot,
-      client: { name: "Cliente B", email: "cliente-b@example.pt", gdprConsent: true },
+      client: { name: "Cliente B", phone: "+351 922 222 222", gdprConsent: true },
     }),
   ]);
   const wins = results.filter((r) => r.ok).length;
@@ -162,7 +161,7 @@ async function main() {
     businessId: business.id,
     serviceIds: [manicure.id, pedicure.id],
     startAt: multiStart,
-    client: { name: "Cliente Multi", email: "multi@example.pt", gdprConsent: true },
+    client: { name: "Cliente Multi", phone: "+351 933 333 333", gdprConsent: true },
   });
   assert(multiBooking.ok, "marcação multi-serviço criada");
   if (multiBooking.ok) {

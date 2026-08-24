@@ -2,14 +2,16 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { createAppointment } from "@/lib/booking/create-appointment";
 import { cancelAppointment } from "@/lib/booking/modify-appointment";
-import { emailSchema } from "@/lib/validation";
 import { z } from "zod";
 
 const createSchema = z.object({
   servicos: z.array(z.string().min(1)).min(1).max(10),
   inicio: z.string().datetime(),
   nome: z.string().trim().min(2).max(120),
-  email: emailSchema,
+  telefone: z
+    .string()
+    .trim()
+    .regex(/^[+\d][\d\s().-]{7,19}$/, "Telefone inválido"),
   notas: z.string().trim().max(500).optional(),
 });
 
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
     bypassLeadTime: true,
     client: {
       name: parsed.data.nome,
-      email: parsed.data.email,
+      phone: parsed.data.telefone,
       notes: parsed.data.notas,
       gdprConsent: true,
     },

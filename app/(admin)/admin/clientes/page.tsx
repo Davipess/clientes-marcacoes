@@ -17,7 +17,7 @@ export default async function AdminClientesPage() {
     select: {
       id: true,
       name: true,
-      emailEnc: true,
+      phoneEnc: true,
       notes: true,
       marketingConsent: true,
       appointments: {
@@ -38,7 +38,7 @@ export default async function AdminClientesPage() {
         clients={clients.map((c) => ({
           id: c.id,
           name: c.name,
-          email: c.emailEnc ? decryptPii(c.emailEnc) : null,
+          phone: c.phoneEnc ? decryptPii(c.phoneEnc) : null,
           notes: c.notes ?? "",
           marketingConsent: c.marketingConsent,
           visits: c.appointments.length,
