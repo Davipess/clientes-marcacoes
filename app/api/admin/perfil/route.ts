@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { mutationLimit } from "@/lib/rate-limit";
 import { requireAdmin } from "@/lib/admin-guard";
 import { audit } from "@/lib/audit";
 import { emailSchema } from "@/lib/validation";
@@ -17,6 +18,8 @@ const profileSchema = z.object({
 export async function PATCH(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/perfil");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = profileSchema.safeParse(body);

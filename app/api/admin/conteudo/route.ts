@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { mutationLimit } from "@/lib/rate-limit";
 import { requireAdmin } from "@/lib/admin-guard";
 import { audit } from "@/lib/audit";
 import { parseSiteContent } from "@/lib/public-data";
@@ -23,6 +24,8 @@ const contentSchema = z.object({
 export async function PUT(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/conteudo");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = contentSchema.safeParse(body);
@@ -56,6 +59,8 @@ export async function PUT(request: Request) {
 export async function GET(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/conteudo");
+  if (limited) return limited;
 
   const settings = await prisma.businessSettings.findUnique({
     where: { businessId: guard.businessId },

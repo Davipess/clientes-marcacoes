@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { mutationLimit } from "@/lib/rate-limit";
 import { requireStaff } from "@/lib/staff-guard";
 import { z } from "zod";
 
@@ -10,6 +11,8 @@ const patchSchema = z.object({
 export async function PATCH(request: Request) {
   const guard = await requireStaff(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "staff/marcacoes");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);

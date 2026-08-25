@@ -4,6 +4,7 @@ import { createAppointment } from "@/lib/booking/create-appointment";
 import { cancelAppointment, rescheduleAppointment } from "@/lib/booking/modify-appointment";
 import { audit } from "@/lib/audit";
 import { phoneSchema } from "@/lib/validation";
+import { mutationLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const createSchema = z.object({

@@ -1,5 +1,6 @@
 ﻿﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
+import { mutationLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 import { audit } from "@/lib/audit";
 
@@ -33,6 +34,8 @@ const settingsSchema = z.object({
 export async function PATCH(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/definicoes");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = settingsSchema.safeParse(body);

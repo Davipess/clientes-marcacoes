@@ -3,6 +3,23 @@ type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
 /**
+ * Limite para mutations autenticadas (admin/staff): generoso, mas impede
+ * scripts de martelarem endpoints mesmo com sessao valida.
+ */
+export function mutationLimit(
+  request: Request,
+  scope: string,
+  limit = 30,
+  windowMs = 60_000,
+): Response | null {
+  const ip = clientIpFrom(request);
+  if (!rateLimit(`${scope}:${ip}`, limit, windowMs).ok) {
+    return Response.json({ error: "Demasiados pedidos." }, { status: 429 });
+  }
+  return null;
+}
+
+/**
  * Client IP for rate limiting. Priority: platform-set headers first
  * (trusted), then the LAST entry of X-Forwarded-For (appended by the
  * proxy — earlier entries are client-controlled and spoofable).

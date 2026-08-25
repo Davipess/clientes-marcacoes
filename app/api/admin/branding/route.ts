@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { mutationLimit } from "@/lib/rate-limit";
 import { requireAdmin } from "@/lib/admin-guard";
 import { audit } from "@/lib/audit";
 import { z } from "zod";
@@ -12,6 +13,8 @@ const brandingSchema = z.object({
 export async function PUT(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/branding");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = brandingSchema.safeParse(body);

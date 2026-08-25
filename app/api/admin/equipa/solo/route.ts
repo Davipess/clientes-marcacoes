@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { mutationLimit } from "@/lib/rate-limit";
 import { requireAdmin } from "@/lib/admin-guard";
 
 /**
@@ -9,6 +10,8 @@ import { requireAdmin } from "@/lib/admin-guard";
 export async function POST(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/equipa/solo");
+  if (limited) return limited;
 
   const existing = await prisma.staff.findFirst({
     where: { businessId: guard.businessId, userId: guard.userId },

@@ -1,5 +1,6 @@
 ﻿﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
+import { mutationLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 import { audit } from "@/lib/audit";
 
@@ -20,6 +21,8 @@ const serviceUpdateSchema = serviceSchema.partial().extend({
 export async function POST(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/servicos");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = serviceSchema.safeParse(body);
@@ -68,6 +71,8 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/servicos");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = serviceUpdateSchema.safeParse(body);
@@ -118,6 +123,8 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/servicos");
+  if (limited) return limited;
 
   const body = (await request.json().catch(() => null)) as { id?: string } | null;
   const id = body?.id;

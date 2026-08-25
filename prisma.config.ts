@@ -8,6 +8,7 @@ export default defineConfig({
     seed: "npx tsx prisma/seed.ts",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    // CLI (migracoes/studio) usa o utilizador OWNER; a aplicacao usa app_user via DATABASE_URL
+    url: env("MIGRATE_DATABASE_URL"),
   },
 });

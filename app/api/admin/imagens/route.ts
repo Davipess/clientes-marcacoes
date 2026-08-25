@@ -1,12 +1,14 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
-import { clientIpFrom, rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom, rateLimit, mutationLimit } from "@/lib/rate-limit";
 
 const MAX_BYTES = 400 * 1024; // images are resized client-side before upload
 
 export async function POST(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/imagens");
+  if (limited) return limited;
 
   const ip = clientIpFrom(request);
   if (!rateLimit(`upload:${ip}`, 20, 60_000).ok) {

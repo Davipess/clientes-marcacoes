@@ -1,5 +1,6 @@
 ﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
+import { mutationLimit } from "@/lib/rate-limit";
 import { hashPassword } from "@/lib/crypto";
 import { emailSchema, passwordSchema } from "@/lib/validation";
 import { Role } from "@/lib/generated/prisma/client";
@@ -16,6 +17,8 @@ const createSchema = z.object({
 export async function POST(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/equipa");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
@@ -89,6 +92,8 @@ const toggleSchema = z.object({
 export async function GET(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/equipa");
+  if (limited) return limited;
 
   const staff = await prisma.staff.findMany({
     where: { businessId: guard.businessId },
@@ -107,6 +112,8 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/equipa");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = toggleSchema.safeParse(body);

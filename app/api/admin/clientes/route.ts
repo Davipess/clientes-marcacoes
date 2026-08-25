@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { mutationLimit } from "@/lib/rate-limit";
 import { requireAdmin } from "@/lib/admin-guard";
 import { audit } from "@/lib/audit";
 import { z } from "zod";
@@ -11,6 +12,8 @@ const notesSchema = z.object({
 export async function PATCH(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/clientes");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = notesSchema.safeParse(body);
@@ -38,6 +41,8 @@ const actionSchema = z.discriminatedUnion("action", [
 export async function PUT(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/clientes");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = actionSchema.safeParse(body);
@@ -102,6 +107,8 @@ const deleteSchema = z.object({ id: z.string().min(1) });
 export async function DELETE(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/clientes");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = deleteSchema.safeParse(body);

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { mutationLimit } from "@/lib/rate-limit";
 import { requireStaff } from "@/lib/staff-guard";
 import { z } from "zod";
 
@@ -12,6 +13,8 @@ const createSchema = z.object({
 export async function POST(request: Request) {
   const guard = await requireStaff(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "staff/blocos");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
@@ -55,6 +58,8 @@ const deleteSchema = z.object({ id: z.string().min(1) });
 export async function DELETE(request: Request) {
   const guard = await requireStaff(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "staff/blocos");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = deleteSchema.safeParse(body);
