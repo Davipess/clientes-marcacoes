@@ -17,7 +17,8 @@
 
    | Variável | Valor |
    |---|---|
-   | `DATABASE_URL` | connection string do Neon (pooled, com `?sslmode=require&uselibpqcompat=true`) |
+   | `DATABASE_URL` | connection string do utilizador **app_user** (privilégios CRUD, sem DDL — ver "Dois utilizadores" abaixo) |
+| `MIGRATE_DATABASE_URL` | connection string do **dono** da BD (neondb_owner) — usada apenas pelo CLI de migrações |
    | `APP_ENCRYPTION_KEY` | chave base64 de 32 bytes (gerar: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`) |
    | `NEXT_PUBLIC_APP_URL` | URL final do site (ex.: `https://salaoexemplo.netlify.app`) |
    | `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | (opcional) para a seed criar o admin |
@@ -69,3 +70,33 @@
 - **Dependências**: correr 
 pm audit antes de cada atualização; manter
   Next.js na versão mais recente (patch de CVE críticos históricos).
+
+## Dois utilizadores de base de dados (menor privilégio)
+
+A aplicação corre com pp_user (SELECT/INSERT/UPDATE/DELETE — sem DDL: mesmo
+comprometida, não consegue apagar nem alterar tabelas). As migrações correm com
+o utilizador owner via MIGRATE_DATABASE_URL.
+
+Criar o pp_user numa instância nova:
+
+`powershell
+$env:NODE_OPTIONS="--conditions=react-server"
+npx tsx scripts/setup-db-user.ts   # escreve a URL em db-user-url.txt
+`"
+
+Copiar a URL gerada para DATABASE_URL (Netlify + .env local).
+
+## Dois utilizadores de base de dados (menor privilégio)
+
+A aplicação corre com `app_user` (SELECT/INSERT/UPDATE/DELETE — **sem DDL**:
+mesmo comprometida, não consegue apagar nem alterar tabelas). As migrações
+correm com o utilizador owner via `MIGRATE_DATABASE_URL`.
+
+Criar o `app_user` numa instância nova:
+
+```powershell
+$env:NODE_OPTIONS="--conditions=react-server"
+npx tsx scripts/setup-db-user.ts   # escreve a URL em db-user-url.txt
+```
+
+Copiar a URL gerada para `DATABASE_URL` (Netlify + `.env` local).
