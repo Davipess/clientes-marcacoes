@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -9,6 +9,6 @@ export default defineConfig({
   },
   datasource: {
     // CLI (migracoes/studio) usa o utilizador OWNER; a aplicacao usa app_user via DATABASE_URL
-    url: env("MIGRATE_DATABASE_URL"),
+    url: process.env.MIGRATE_DATABASE_URL || process.env.DATABASE_URL || "",
   },
 });
