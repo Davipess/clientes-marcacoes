@@ -216,7 +216,7 @@ const victimPhone2 = "960333444"; // SEGUNDA vitima - o atacante NAO sabe este n
     select: { phoneEnc: true },
   });
   console.log(
-    `\n[bd] vitima na base: ${victim ? "presente (encriptada: " + victim.phoneEnc.slice(0, 30) + "...)" : "ausente"}`,
+    `\n[bd] vitima na base: ${victim ? "presente (encriptada: " + (victim.phoneEnc?.slice(0, 30) ?? "(ja minimizado)") + "...)" : "ausente"}`,
   );
   if (victim) {
     const decrypted = ((): string => {

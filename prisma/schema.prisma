@@ -60,7 +60,8 @@ model BusinessSettings {
   maxActiveBookingsPerPhone Int @default(3) // future pending/confirmed per phone
   maxBookingsPerPhonePerDay Int @default(3) // new bookings created per day per phone
   noShowFlagThreshold       Int @default(2) // no-shows before the "at risk" badge
-  retentionMonths           Int @default(24) // final-state appointment cleanup age
+  retentionMonths           Int @default(1) // historico da marcacao apagado apos 1 mes
+  contactRetentionDays      Int @default(7) // apagar nome/telefone apos a ultima visita
 
   // ── Editable site copy (white-label) ──
   // Keys with fallbacks in code; owner edits everything in the admin.
@@ -216,7 +217,9 @@ model Client {
   name             String
   // Phone is the sole client identifier (booking limits, no-show protection).
   // PII stored encrypted at rest (AES-256-GCM, key only in app env).
-  phoneEnc         String
+  // phoneEnc e o nome sao APAGADOS apos a visita (minimizacao de dados);
+  // phoneHash permanece como identidade pseudonima para anti-abuso.
+  phoneEnc         String?
   phoneHash        String
   emailEnc         String? // optional, kept only if a client volunteers it
   emailHash        String?

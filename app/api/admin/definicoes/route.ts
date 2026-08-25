@@ -28,7 +28,8 @@ const settingsSchema = z.object({
   maxActiveBookingsPerPhone: z.number().int().min(1).max(20),
   maxBookingsPerPhonePerDay: z.number().int().min(1).max(20),
   noShowFlagThreshold: z.number().int().min(1).max(20),
-  retentionMonths: z.number().int().min(6).max(120),
+  retentionMonths: z.number().int().min(1).max(120),
+  contactRetentionDays: z.number().int().min(0).max(365),
 });
 
 export async function PATCH(request: Request) {
@@ -81,6 +82,7 @@ export async function PATCH(request: Request) {
         maxBookingsPerPhonePerDay: data.maxBookingsPerPhonePerDay,
         noShowFlagThreshold: data.noShowFlagThreshold,
         retentionMonths: data.retentionMonths,
+        contactRetentionDays: data.contactRetentionDays,
       },
       create: {
         businessId: guard.businessId,
@@ -94,6 +96,7 @@ export async function PATCH(request: Request) {
         maxBookingsPerPhonePerDay: data.maxBookingsPerPhonePerDay,
         noShowFlagThreshold: data.noShowFlagThreshold,
         retentionMonths: data.retentionMonths,
+        contactRetentionDays: data.contactRetentionDays,
       },
     }),
   ]);

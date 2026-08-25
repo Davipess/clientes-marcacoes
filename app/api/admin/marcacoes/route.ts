@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { createAppointment } from "@/lib/booking/create-appointment";
 import { cancelAppointment, rescheduleAppointment } from "@/lib/booking/modify-appointment";
 import { audit } from "@/lib/audit";
+import { minimizeClientIfNoFuture } from "@/lib/retention";
 import { phoneSchema } from "@/lib/validation";
 import { mutationLimit } from "@/lib/rate-limit";
 import { z } from "zod";
@@ -18,6 +19,8 @@ const createSchema = z.object({
 export async function POST(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/marcacoes");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
@@ -85,6 +88,8 @@ export async function PUT(request: Request) {
 export async function PATCH(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/marcacoes");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
@@ -99,6 +104,8 @@ export async function PATCH(request: Request) {
     if (!result.ok) {
       return Response.json({ error: result.message }, { status: 400 });
     }
+    const cancelled = await prisma.appointment.findUnique({ where: { id }, select: { clientId: true } });
+    if (cancelled) await minimizeClientIfNoFuture(cancelled.clientId);
     return Response.json({ ok: true });
   }
 
@@ -118,7 +125,6 @@ export async function PATCH(request: Request) {
       where: { id: appointment.id },
       data: { status: action },
     }),
-    // No-show counter lives on the client and outlives appointment cleanup.
     ...(action === "NO_SHOW"
       ? [
           prisma.client.update({
@@ -132,5 +138,6 @@ export async function PATCH(request: Request) {
   if (action === "NO_SHOW") {
     await audit(guard.businessId, guard.email, "appointment.no_show", appointment.id);
   }
+  await minimizeClientIfNoFuture(appointment.clientId);
   return Response.json({ ok: true });
 }

@@ -44,6 +44,7 @@ export function SettingsForm({
     maxBookingsPerPhonePerDay: number;
     noShowFlagThreshold: number;
     retentionMonths: number;
+    contactRetentionDays: number;
   };
   soloMode: {
     hasOwnProfile: boolean;
@@ -144,6 +145,7 @@ export function SettingsForm({
           maxBookingsPerPhonePerDay: Number(formData.get("maxBookingsPerPhonePerDay")),
           noShowFlagThreshold: Number(formData.get("noShowFlagThreshold")),
           retentionMonths: Number(formData.get("retentionMonths")),
+    contactRetentionDays: Number(formData.get("contactRetentionDays")),
         }),
       });
       const json = await res.json();
@@ -464,9 +466,18 @@ export function SettingsForm({
           </div>
           <div>
             <Label htmlFor="retentionMonths">Manter histórico (meses)</Label>
-            <Input id="retentionMonths" name="retentionMonths" type="number" min={6} max={120} defaultValue={settings.retentionMonths} className="mt-1.5" />
+            <Input id="retentionMonths" name="retentionMonths" type="number" min={1} max={120} defaultValue={settings.retentionMonths} className="mt-1.5" />
+          </div>
+          <div>
+            <Label htmlFor="contactRetentionDays">Apagar contacto após visita (dias)</Label>
+            <Input id="contactRetentionDays" name="contactRetentionDays" type="number" min={0} max={365} defaultValue={settings.contactRetentionDays} className="mt-1.5" />
           </div>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Após o prazo de apagar contacto, o nome e o número são removidos
+          automaticamente se não houver marcações futuras — fica apenas um
+          histórico anónimo. Os limites anti-abuso continuam a funcionar.
+        </p>
       </section>
 
       <div className="flex items-center gap-3">

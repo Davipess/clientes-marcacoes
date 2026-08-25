@@ -102,13 +102,38 @@ export default async function PrivacidadePage() {
             4. Durante quanto tempo guardamos os dados
           </h2>
           <p className="mt-1">
-            As marcações em estado final (concluídas, canceladas ou não
-            comparecidas) são eliminadas automaticamente após o período de
-            retenção definido pelo salão (por defeito, 24 meses). O registo de
-            faltas de comparecimento, necessário para proteção contra abusos,
-            pode manter-se associado ao número de telefone por período mais
-            longo, de forma dissociada das marcações individuais. Pode pedir a
-            eliminação antecipada a qualquer momento (ver secção 7).
+            Aplicamos um calendário rigoroso de eliminação — em 1 mês, uma
+            marcação não deixa nenhum traço:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              <strong className="text-foreground">Marcação fechada pelo salão</strong>{" "}
+              (concluída, falta registada ou cancelada) — o seu nome e telefone
+              são <strong>apagados de imediato</strong>, se não tiver outras
+              marcações futuras;
+            </li>
+            <li>
+              <strong className="text-foreground">Marcação não fechada</strong> —
+              se o salão não atualizar o estado, os seus dados são apagados de
+              qualquer forma <strong>7 dias após a data da marcação</strong>;
+            </li>
+            <li>
+              <strong className="text-foreground">1 mês depois</strong> — o
+              histórico da marcação (serviços e datas) é{" "}
+              <strong>eliminado por completo</strong>. Não resta nenhum traço
+              que possa ser ligado a si;
+            </li>
+            <li>
+              <strong className="text-foreground">Contador de faltas</strong> — um
+              número associado a um código irreversível do seu telefone
+              (pseudónimo), usado apenas para proteção contra abusos. Não
+              permite recuperar o número nem contactar ninguém, e pode ser
+              zerado a seu pedido.
+            </li>
+          </ul>
+          <p className="mt-2">
+            Pode pedir a eliminação antecipada de tudo a qualquer momento (ver
+            secção 7).
           </p>
         </section>
 

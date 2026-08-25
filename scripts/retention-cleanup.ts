@@ -1,11 +1,11 @@
 import "dotenv/config";
-import { runRetentionCleanup } from "../lib/retention";
+import { minimizeStaleContacts, runRetentionCleanup } from "../lib/retention";
 import { prisma } from "../lib/db";
 
-runRetentionCleanup()
-  .then((r) => {
+Promise.all([runRetentionCleanup(), minimizeStaleContacts()])
+  .then(([r, m]) => {
     console.log(
-      `Retenção: ${r.deletedAppointments} marcações removidas, ${r.deletedNotifications} registos de notificação removidos.`,
+      `Retenção: ${r.deletedAppointments} marcações removidas, ${r.deletedNotifications} notificações removidas, ${m} contactos minimizados (nome/telefone apagados).`,
     );
   })
   .catch((e) => {

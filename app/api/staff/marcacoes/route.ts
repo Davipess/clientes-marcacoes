@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { mutationLimit } from "@/lib/rate-limit";
 import { requireStaff } from "@/lib/staff-guard";
+import { minimizeClientIfNoFuture } from "@/lib/retention";
 import { z } from "zod";
 
 const patchSchema = z.object({
@@ -52,5 +53,6 @@ export async function PATCH(request: Request) {
       : []),
   ]);
 
+  await minimizeClientIfNoFuture(appointment.clientId);
   return Response.json({ ok: true });
 }

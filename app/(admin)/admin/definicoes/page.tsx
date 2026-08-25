@@ -78,6 +78,7 @@ export default async function AdminDefinicoesPage() {
             business.settings?.maxBookingsPerPhonePerDay ?? 3,
           noShowFlagThreshold: business.settings?.noShowFlagThreshold ?? 2,
           retentionMonths: business.settings?.retentionMonths ?? 24,
+          contactRetentionDays: business.settings?.contactRetentionDays ?? 7,
         }}
         soloMode={{
           hasOwnProfile: Boolean(ownStaffProfile),

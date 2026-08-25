@@ -60,7 +60,7 @@ export default async function AdminClientesPage() {
         clients={clientsList.map((c) => ({
           id: c.id,
           name: c.name,
-          phone: decryptPiiSafe(c.phoneEnc) ?? "(indisponível)",
+          phone: decryptPiiSafe(c.phoneEnc) ?? "(apagado após a visita)",
           notes: c.notes ?? "",
           marketingConsent: c.marketingConsent,
           noShowCount: c.noShowCount,
