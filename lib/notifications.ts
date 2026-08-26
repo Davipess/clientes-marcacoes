@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import type { NotificationType } from "@/lib/generated/prisma/client";
+import { sendPushToUser } from "@/lib/push";
 
 type Channel = "NONE" | "EMAIL" | "WHATSAPP" | "SMS";
 
@@ -67,19 +68,48 @@ export async function queueDueReminders(): Promise<number> {
       select: {
         id: true,
         startAt: true,
-        client: { select: { phoneHash: true } },
+        client: { select: { phoneHash: true, userId: true } },
+        staff: { select: { userId: true } },
         items: { select: { serviceName: true } },
       },
     });
 
     for (const appt of upcoming) {
+      const serviceNames = appt.items.map((i) => i.serviceName).join(" + ");
+      const timeStr = appt.startAt.toLocaleTimeString("pt-PT", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      // Log the reminder
       await queueNotification({
         businessId: settings.businessId,
         appointmentId: appt.id,
         type: "REMINDER",
-        recipient: appt.client.phoneHash, // hash only — no PII in logs
-        message: `Lembrete: ${appt.items.map((i) => i.serviceName).join(" + ")}`,
+        recipient: appt.client.phoneHash,
+        message: `Lembrete: ${serviceNames}`,
       });
+
+      // Push to client (if subscribed)
+      if (appt.client.userId) {
+        await sendPushToUser(appt.client.userId, {
+          title: "Lembrete de marcação",
+          body: `A sua marcação de ${serviceNames} é às ${timeStr}. Pagamento no local.`,
+          url: "/",
+          tag: `reminder-${appt.id}`,
+        }).catch(() => {});
+      }
+
+      // Push to business owner/staff
+      if (appt.staff?.userId) {
+        await sendPushToUser(appt.staff.userId, {
+          title: "Lembrete — marcação em 1h",
+          body: `${serviceNames} às ${timeStr}`,
+          url: "/admin/agenda",
+          tag: `reminder-${appt.id}`,
+        }).catch(() => {});
+      }
+
       queued++;
     }
   }

@@ -33,6 +33,7 @@ model Business {
   appointments     Appointment[]
   exceptions       AvailabilityException[]
   notificationLogs NotificationLog[]
+  pushSubscriptions PushSubscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -99,6 +100,7 @@ model User {
   staffProfile  Staff?
   clientProfile Client?
   sessions      Session[]
+  pushSubscriptions PushSubscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -320,6 +322,7 @@ enum NotificationChannel {
   EMAIL
   SMS
   WHATSAPP
+  PUSH
 }
 
 enum NotificationType {
@@ -381,4 +384,21 @@ model AuditLog {
 
   @@index([businessId, createdAt])
   @@map("audit_logs")
+}
+
+model PushSubscription {
+  id           String @id @default(cuid())
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
+  userId       String?
+  user         User?   @relation(fields: [userId], references: [id])
+  endpoint     String
+  p256dh       String
+  auth         String
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@unique([endpoint])
+  @@index([businessId])
+  @@map("push_subscriptions")
 }

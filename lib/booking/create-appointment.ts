@@ -2,6 +2,7 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { encryptPii, normalizePhone, piiLookupHash } from "@/lib/crypto";
 import { nowZoned, parseHHMM, utcIntervalToWallMinutes, weekdayKey } from "./time";
+import { sendPushToBusiness } from "@/lib/push";
 
 export type CreateBookingInput = {
   businessId: string;
@@ -350,12 +351,37 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
     throw error;
   }
 
-  return {
+  const result: OnceResult = {
     conflict: false,
     result: outcome.ok
       ? { ok: true, appointmentId: outcome.id }
       : { ok: false, code: outcome.code, message: outcome.message },
   };
+
+  // Push notification to business owner (fire-and-forget)
+  if (outcome.ok) {
+    prisma.appointment
+      .findUnique({
+        where: { id: outcome.id },
+        select: {
+          startAt: true,
+          client: { select: { name: true } },
+          items: { select: { serviceName: true } },
+        },
+      })
+      .then((appt) => {
+        if (!appt) return;
+        return sendPushToBusiness(input.businessId, {
+          title: "Nova marcação",
+          body: `${appt.client.name} — ${appt.items.map((i) => i.serviceName).join(" + ")} — ${appt.startAt.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+          url: "/admin/agenda",
+          tag: "new-booking",
+        });
+      })
+      .catch(() => {});
+  }
+
+  return result;
 }
 
 /**

@@ -11,6 +11,7 @@ import {
   formatEuros,
 } from "@/lib/format";
 import type { PublicCategory, PublicStaff } from "@/lib/public-data";
+import { ClientPushPrompt } from "./client-push-prompt";
 
 type Props = {
   categories: PublicCategory[];
@@ -265,6 +266,9 @@ export function BookingWizard({
           📅 Guarde esta data no calendário do seu telemóvel para não se
           esquecer. Pagamento efetuado no local.
         </p>
+        <div className="mt-5">
+          <ClientPushPrompt />
+        </div>
         <Button asChild variant="outline" className="mt-7 rounded-full">
           <Link href="/">Voltar à página inicial</Link>
         </Button>
