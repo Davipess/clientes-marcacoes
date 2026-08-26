@@ -45,7 +45,41 @@ export async function sendPushToUser(
     } catch (err: unknown) {
       failed++;
       const status = (err as { statusCode?: number }).statusCode;
-      // 404/410 = subscription expired → remove it
+      if (status === 404 || status === 410) {
+        await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
+      }
+    }
+  }
+
+  return { sent, failed };
+}
+
+export async function sendPushToClientByPhoneHash(
+  businessId: string,
+  clientPhoneHash: string,
+  payload: PushPayload,
+): Promise<{ sent: number; failed: number }> {
+  const subs = await prisma.pushSubscription.findMany({
+    where: { businessId, clientPhoneHash },
+    select: { id: true, endpoint: true, p256dh: true, auth: true },
+  });
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const sub of subs) {
+    try {
+      await webPush.sendNotification(
+        {
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth },
+        },
+        JSON.stringify(payload),
+      );
+      sent++;
+    } catch (err: unknown) {
+      failed++;
+      const status = (err as { statusCode?: number }).statusCode;
       if (status === 404 || status === 410) {
         await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
       }

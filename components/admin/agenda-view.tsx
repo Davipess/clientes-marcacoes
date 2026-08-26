@@ -20,20 +20,6 @@ type AgendaAppointment = {
   services: string[];
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pendente",
-  CONFIRMED: "Confirmada",
-  COMPLETED: "Concluída",
-  CANCELLED: "Cancelada",
-  NO_SHOW: "Não compareceu",
-};
-
-function statusClasses(status: string): string {
-  if (status === "COMPLETED") return "bg-green-100 text-green-800";
-  if (status === "CANCELLED" || status === "NO_SHOW") return "bg-red-100 text-red-700";
-  return "bg-secondary text-secondary-foreground";
-}
-
 export function AgendaView({
   date,
   prevDate,
@@ -53,7 +39,6 @@ export function AgendaView({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Two-step inline confirmation instead of window.confirm (more predictable).
   const [pending, setPending] = useState<{ id: string; action: string } | null>(null);
   const [rescheduleFor, setRescheduleFor] = useState<{ id: string; data: string; hora: string } | null>(null);
 
@@ -63,8 +48,7 @@ export function AgendaView({
     month: "long",
   });
 
-  async function act(id: string, action: "COMPLETED" | "NO_SHOW" | "CANCEL") {
-    // First click arms the button; second click executes.
+  async function act(id: string, action: "COMPLETED" | "NO_SHOW") {
     if (!pending || pending.id !== id || pending.action !== action) {
       setPending({ id, action });
       return;
@@ -175,7 +159,6 @@ export function AgendaView({
         </p>
       )}
 
-      {/* Manual booking form */}
       {showNew && (
         <form
           action={createManual}
@@ -218,7 +201,6 @@ export function AgendaView({
         </form>
       )}
 
-      {/* Day list */}
       <ul className="mt-6 space-y-3">
         {appointments.length === 0 && (
           <li className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
@@ -236,7 +218,6 @@ export function AgendaView({
             minute: "2-digit",
             timeZone: timezone,
           });
-          const active = appt.status === "PENDING" || appt.status === "CONFIRMED";
           return (
             <li
               key={appt.id}
@@ -258,75 +239,56 @@ export function AgendaView({
                     {appt.services.join(" + ")}
                   </p>
                   {appt.notes && (
-                    <p className="mt-1 text-xs italic text-muted-foreground">“{appt.notes}”</p>
+                    <p className="mt-1 text-xs italic text-muted-foreground">"{appt.notes}"</p>
                   )}
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${statusClasses(appt.status)}`}
-                >
-                  {STATUS_LABELS[appt.status]}
-                </span>
               </div>
-              {active && (
-                <div className="mt-3 flex flex-wrap gap-2 border-t border-border/60 pt-3">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    disabled={busyId === appt.id}
-                    onClick={() => act(appt.id, "COMPLETED")}
-                  >
-                    {pending?.id === appt.id && pending.action === "COMPLETED"
-                      ? "Confirmar conclusão?"
-                      : "✓ Concluída"}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    disabled={busyId === appt.id}
-                    onClick={() => act(appt.id, "NO_SHOW")}
-                  >
-                    {pending?.id === appt.id && pending.action === "NO_SHOW"
-                      ? "Confirmar falta?"
-                      : "Não compareceu"}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    disabled={busyId === appt.id}
-                    onClick={() =>
-                      setRescheduleFor({
-                        id: appt.id,
-                        data: date,
-                        hora: new Date(appt.startAt).toLocaleTimeString("pt-PT", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          timeZone: timezone,
-                        }),
-                      })
-                    }
-                  >
-                    Reagendar
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full text-destructive hover:text-destructive"
-                    disabled={busyId === appt.id}
-                    onClick={() => act(appt.id, "CANCEL")}
-                  >
-                    {pending?.id === appt.id && pending.action === "CANCEL"
-                      ? "Confirmar cancelamento?"
-                      : "Cancelar"}
-                  </Button>
-                </div>
-              )}
+              <div className="mt-3 flex flex-wrap gap-2 border-t border-border/60 pt-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={busyId === appt.id}
+                  onClick={() => act(appt.id, "COMPLETED")}
+                >
+                  {pending?.id === appt.id && pending.action === "COMPLETED"
+                    ? "Confirmar conclusão?"
+                    : "✓ Concluída"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={busyId === appt.id}
+                  onClick={() => act(appt.id, "NO_SHOW")}
+                >
+                  {pending?.id === appt.id && pending.action === "NO_SHOW"
+                    ? "Confirmar falta?"
+                    : "Não compareceu"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={busyId === appt.id}
+                  onClick={() =>
+                    setRescheduleFor({
+                      id: appt.id,
+                      data: date,
+                      hora: new Date(appt.startAt).toLocaleTimeString("pt-PT", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone: timezone,
+                      }),
+                    })
+                  }
+                >
+                  Reagendar
+                </Button>
+              </div>
               {rescheduleFor?.id === appt.id && (
                 <div className="animate-fade-in mt-3 flex flex-wrap items-end gap-2 rounded-xl bg-muted/60 p-3">
                   <div>

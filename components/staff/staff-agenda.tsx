@@ -14,20 +14,6 @@ type StaffAppointment = {
   services: string[];
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pendente",
-  CONFIRMED: "Confirmada",
-  COMPLETED: "Concluída",
-  CANCELLED: "Cancelada",
-  NO_SHOW: "Não compareceu",
-};
-
-function statusClasses(status: string): string {
-  if (status === "COMPLETED") return "bg-green-100 text-green-800";
-  if (status === "CANCELLED" || status === "NO_SHOW") return "bg-red-100 text-red-700";
-  return "bg-secondary text-secondary-foreground";
-}
-
 export function StaffAgenda({
   date,
   prevDate,
@@ -125,7 +111,6 @@ export function StaffAgenda({
             minute: "2-digit",
             timeZone: timezone,
           });
-          const active = appt.status === "PENDING" || appt.status === "CONFIRMED";
           return (
             <li
               key={appt.id}
@@ -141,40 +126,33 @@ export function StaffAgenda({
                     {appt.services.join(" + ")}
                   </p>
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${statusClasses(appt.status)}`}
-                >
-                  {STATUS_LABELS[appt.status]}
-                </span>
               </div>
-              {active && (
-                <div className="mt-3 flex gap-2 border-t border-border/60 pt-3">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    disabled={busyId === appt.id}
-                    onClick={() => act(appt.id, "COMPLETED")}
-                  >
-                    {pending?.id === appt.id && pending.action === "COMPLETED"
-                      ? "Confirmar conclusão?"
-                      : "✓ Marcar como concluída"}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    disabled={busyId === appt.id}
-                    onClick={() => act(appt.id, "NO_SHOW")}
-                  >
-                    {pending?.id === appt.id && pending.action === "NO_SHOW"
-                      ? "Confirmar falta?"
-                      : "Não compareceu"}
-                  </Button>
-                </div>
-              )}
+              <div className="mt-3 flex gap-2 border-t border-border/60 pt-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={busyId === appt.id}
+                  onClick={() => act(appt.id, "COMPLETED")}
+                >
+                  {pending?.id === appt.id && pending.action === "COMPLETED"
+                    ? "Confirmar conclusão?"
+                    : "✓ Marcar como concluída"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={busyId === appt.id}
+                  onClick={() => act(appt.id, "NO_SHOW")}
+                >
+                  {pending?.id === appt.id && pending.action === "NO_SHOW"
+                    ? "Confirmar falta?"
+                    : "Não compareceu"}
+                </Button>
+              </div>
             </li>
           );
         })}

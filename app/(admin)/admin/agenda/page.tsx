@@ -20,7 +20,6 @@ export default async function AdminAgendaPage({
   });
   const tz = business.timezone;
 
-  // Target date (wall clock at the business), defaults to today.
   const todayParts = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
     year: "numeric",
@@ -55,7 +54,7 @@ export default async function AdminAgendaPage({
       where: {
         businessId: user.businessId,
         startAt: { gte: dayStart, lt: dayEnd },
-        client: { phoneEnc: { not: null } },
+        status: { in: ["PENDING", "CONFIRMED"] },
       },
       include: {
         client: { select: { name: true, phoneEnc: true } },

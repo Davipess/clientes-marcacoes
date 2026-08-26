@@ -5,6 +5,7 @@ import { cancelAppointment, rescheduleAppointment } from "@/lib/booking/modify-a
 import { audit } from "@/lib/audit";
 import { minimizeClientIfNoFuture } from "@/lib/retention";
 import { earnPoints } from "@/lib/loyalty";
+import { sendPushToClientByPhoneHash } from "@/lib/push";
 import { phoneSchema } from "@/lib/validation";
 import { mutationLimit } from "@/lib/rate-limit";
 import { z } from "zod";
@@ -87,6 +88,36 @@ export async function PUT(request: Request) {
     return Response.json({ error: result.message }, { status: result.code === "NOT_FOUND" ? 404 : 409 });
   }
   await audit(guard.businessId, guard.email, "appointment.reschedule", parsed.data.id);
+
+  // Notify client of reschedule via push
+  const appt = await prisma.appointment.findUnique({
+    where: { id: parsed.data.id },
+    select: { clientId: true, startAt: true, items: { select: { serviceName: true }, take: 1 } },
+  });
+  if (appt) {
+    const client = await prisma.client.findUnique({
+      where: { id: appt.clientId },
+      select: { phoneHash: true },
+    });
+    if (client?.phoneHash) {
+      const newDate = new Date(parsed.data.inicio).toLocaleDateString("pt-PT", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      });
+      const newTime = new Date(parsed.data.inicio).toLocaleTimeString("pt-PT", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const serviceName = appt.items[0]?.serviceName ?? "Marcação";
+      sendPushToClientByPhoneHash(guard.businessId, client.phoneHash, {
+        title: "Marcação reagendada",
+        body: `${serviceName} — Nova data: ${newDate} às ${newTime}. Se não lhe convier, contacte o salão.`,
+        url: "/pontos",
+      }).catch(() => {});
+    }
+  }
+
   return Response.json({ ok: true });
 }
 
