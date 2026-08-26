@@ -1,4 +1,4 @@
-﻿﻿import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { mutationLimit } from "@/lib/rate-limit";
 import { z } from "zod";
@@ -130,11 +130,19 @@ export async function DELETE(request: Request) {
   const id = body?.id;
   if (!id) return Response.json({ error: "ID em falta." }, { status: 400 });
 
-  // Soft-delete keeps appointment history consistent.
-  await prisma.service.updateMany({
+  // Check service exists and belongs to this business
+  const service = await prisma.service.findFirst({
     where: { id, businessId: guard.businessId },
-    data: { archived: true },
+    select: { id: true },
   });
-  await audit(guard.businessId, guard.email, "service.archive", id);
+  if (!service) return Response.json({ error: "Serviço não encontrado." }, { status: 404 });
+
+  // Hard delete: remove appointment items referencing this service, staff links, then service
+  await prisma.$transaction([
+    prisma.appointmentItem.deleteMany({ where: { serviceId: id } }),
+    prisma.serviceStaff.deleteMany({ where: { serviceId: id } }),
+    prisma.service.delete({ where: { id } }),
+  ]);
+  await audit(guard.businessId, guard.email, "service.delete", id);
   return Response.json({ ok: true });
 }

@@ -140,14 +140,14 @@ export function ServiceManager({
     setNewCategoryName("");
   }
 
-  const [pendingArchive, setPendingArchive] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
-  async function archive(service: ServiceItem) {
-    if (pendingArchive !== service.id) {
-      setPendingArchive(service.id);
+  async function removeService(service: ServiceItem) {
+    if (pendingDelete !== service.id) {
+      setPendingDelete(service.id);
       return;
     }
-    setPendingArchive(null);
+    setPendingDelete(null);
     const result = await api("/api/admin/servicos", "DELETE", { id: service.id });
     if (!result) return;
     setServices((prev) => prev.filter((s) => s.id !== service.id));
@@ -210,13 +210,13 @@ export function ServiceManager({
                     variant="ghost"
                     size="sm"
                     className={
-                      pendingArchive === service.id
+                      pendingDelete === service.id
                         ? "bg-destructive text-white hover:bg-destructive"
                         : "text-destructive hover:text-destructive"
                     }
-                    onClick={() => archive(service)}
+                    onClick={() => removeService(service)}
                   >
-                    {pendingArchive === service.id ? "Confirmar?" : "Arquivar"}
+                    {pendingDelete === service.id ? "Confirmar?" : "Eliminar"}
                   </Button>
                 </div>
               ))}
