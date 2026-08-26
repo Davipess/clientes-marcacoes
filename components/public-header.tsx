@@ -34,6 +34,12 @@ export function PublicHeader({ name, logoUrl }: PublicHeaderProps) {
             {t("nav.services")}
           </Link>
           <Link
+            href="/pontos"
+            className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {t("nav.loyalty")}
+          </Link>
+          <Link
             href="/marcar"
             className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:brightness-110 active:scale-[0.98]"
           >
