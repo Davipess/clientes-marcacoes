@@ -59,6 +59,7 @@ export default async function StaffHomePage({
       staffId: staff.id,
       startAt: { gte: dayStart, lt: dayEnd },
       status: { in: ["PENDING", "CONFIRMED", "COMPLETED", "NO_SHOW"] },
+      client: { phoneEnc: { not: null } },
     },
     include: {
       client: { select: { name: true } },

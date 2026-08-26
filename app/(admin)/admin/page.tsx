@@ -43,6 +43,7 @@ export default async function AdminHomePage() {
           businessId: business.id,
           startAt: { gte: todayStart, lt: tomorrowStart },
           status: { in: ["PENDING", "CONFIRMED", "COMPLETED", "NO_SHOW"] },
+          client: { phoneEnc: { not: null } },
         },
         include: {
           client: { select: { name: true } },

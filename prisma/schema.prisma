@@ -34,6 +34,11 @@ model Business {
   exceptions       AvailabilityException[]
   notificationLogs NotificationLog[]
   pushSubscriptions PushSubscription[]
+  loyaltyCards    LoyaltyCard[]
+  loyaltyRewards  LoyaltyReward[]
+  loyaltyTransactions LoyaltyTransaction[]
+  waitlistEntries WaitlistEntry[]
+  recurringRules  RecurringRule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -138,6 +143,7 @@ model Staff {
   timeOff      TimeOff[] // vacations / days off
   appointments Appointment[]
   blocks       AvailabilityException[]
+  recurringRules RecurringRule[]
 
   @@map("staff")
 }
@@ -194,6 +200,7 @@ model Service {
   archived     Boolean         @default(false)
   staff        ServiceStaff[]
   appointmentItems AppointmentItem[]
+  waitlistEntries WaitlistEntry[]
 
   @@map("services")
 }
@@ -237,6 +244,10 @@ model Client {
 
   appointments Appointment[]
   reviews      Review[]
+  loyaltyCards LoyaltyCard[]
+  loyaltyTransactions LoyaltyTransaction[]
+  waitlistEntries WaitlistEntry[]
+  recurringRules RecurringRule[]
 
   @@unique([businessId, phoneHash]) // identity per business
   @@map("clients")
@@ -277,6 +288,7 @@ model Appointment {
 
   items         AppointmentItem[] // multiple services in one visit
   notifications NotificationLog[]
+  loyaltyTransactions LoyaltyTransaction[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -401,4 +413,99 @@ model PushSubscription {
   @@unique([endpoint])
   @@index([businessId])
   @@map("push_subscriptions")
+}
+
+// ── Loyalty program ──────────────────────────────────────────────
+model LoyaltyCard {
+  id           String  @id @default(cuid())
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
+  clientId     String
+  client       Client  @relation(fields: [clientId], references: [id])
+  points       Int     @default(0)
+  totalEarned  Int     @default(0)
+  transactions LoyaltyTransaction[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([businessId, clientId])
+  @@map("loyalty_cards")
+}
+
+model LoyaltyReward {
+  id           String  @id @default(cuid())
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
+  name         String
+  pointsCost   Int
+  description  String?
+  active       Boolean @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([businessId])
+  @@map("loyalty_rewards")
+}
+
+model LoyaltyTransaction {
+  id           String  @id @default(cuid())
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
+  clientId     String
+  client       Client  @relation(fields: [clientId], references: [id])
+  cardId       String
+  card         LoyaltyCard @relation(fields: [cardId], references: [id])
+  appointmentId String?
+  appointment  Appointment? @relation(fields: [appointmentId], references: [id])
+  points       Int     // positive = earned, negative = redeemed
+  reason       String  // "booking_completed", "reward_redeemed", "bonus"
+  createdAt    DateTime @default(now())
+
+  @@index([businessId, clientId])
+  @@map("loyalty_transactions")
+}
+
+// ── Waitlist ─────────────────────────────────────────────────────
+model WaitlistEntry {
+  id           String  @id @default(cuid())
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
+  clientId     String?
+  client       Client?  @relation(fields: [clientId], references: [id])
+  clientName   String
+  clientPhone  String
+  serviceId    String
+  service      Service  @relation(fields: [serviceId], references: [id])
+  preferredDate DateTime
+  preferredTime String?  // "morning", "afternoon", or specific time
+  status       String   @default("WAITING") // WAITING, NOTIFIED, BOOKED, CANCELLED
+  notifiedAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([businessId, status])
+  @@map("waitlist_entries")
+}
+
+// ── Recurring bookings ──────────────────────────────────────────
+model RecurringRule {
+  id           String  @id @default(cuid())
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
+  clientId     String
+  client       Client  @relation(fields: [clientId], references: [id])
+  staffId      String
+  staff        Staff   @relation(fields: [staffId], references: [id])
+  serviceIds   String[] // array of service IDs
+  frequency    String   // "weekly", "biweekly", "monthly"
+  dayOfWeek    Int?     // 0=Sun, 1=Mon, ... 6=Sat (for weekly/biweekly)
+  dayOfMonth   Int?     // 1-31 (for monthly)
+  timeOfDay    String   // "HH:MM"
+  startDate    DateTime
+  endDate      DateTime? // null = indefinite
+  active       Boolean  @default(true)
+  lastGenerated DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([businessId, active])
+  @@map("recurring_rules")
 }

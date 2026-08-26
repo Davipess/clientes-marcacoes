@@ -208,6 +208,97 @@ export default async function RelatoriosPage({
         Receita baseada em marcações concluídas (pagamento reconciliado no
         local). Período atual: {periodLabel}.
       </p>
+
+      {/* Revenue by service */}
+      <section className="mt-8">
+        <h2 className="font-heading text-lg font-semibold">
+          Receita por serviço ({periodLabel})
+        </h2>
+        {topServices.length === 0 ? (
+          <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            Ainda sem dados de receita.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {(() => {
+              const serviceRevenue = new Map<string, number>();
+              for (const appt of completed) {
+                for (const item of appt.items) {
+                  serviceRevenue.set(
+                    item.serviceName,
+                    (serviceRevenue.get(item.serviceName) ?? 0) + Number(item.unitPrice),
+                  );
+                }
+              }
+              const sorted = [...serviceRevenue.entries()].sort((a, b) => b[1] - a[1]);
+              const maxRevenue = sorted[0]?.[1] ?? 1;
+              return sorted.map(([name, rev]) => (
+                <div key={name} className="flex items-center gap-3">
+                  <div className="w-32 truncate text-sm font-medium">{name}</div>
+                  <div className="flex-1">
+                    <div className="h-6 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${Math.max((rev / maxRevenue) * 100, 4)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-20 text-right text-sm font-medium tabular-nums">
+                    {formatEuros(rev)}
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+        )}
+      </section>
+
+      {/* Monthly revenue last 6 months */}
+      <section className="mt-8">
+        <h2 className="font-heading text-lg font-semibold">Receita dos últimos 6 meses</h2>
+        <MonthlyRevenueChart businessId={user.businessId} tz={tz} />
+      </section>
+    </div>
+  );
+}
+
+async function MonthlyRevenueChart({ businessId, tz }: { businessId: string; tz: string }) {
+  const months: { label: string; start: Date; end: Date }[] = [];
+  const now = nowZoned(tz);
+  for (let i = 5; i >= 0; i--) {
+    const m = now.month - i;
+    const y = now.year + Math.floor((m - 1) / 12);
+    const adjM = ((m - 1) % 12) + 1;
+    const start = zonedToUtc(y, adjM, 1, 0, 0, tz);
+    const end = adjM === 12 ? zonedToUtc(y + 1, 1, 1, 0, 0, tz) : zonedToUtc(y, adjM + 1, 1, 0, 0, tz);
+    const label = new Date(y, adjM - 1).toLocaleDateString("pt-PT", { month: "short" });
+    months.push({ label, start, end });
+  }
+
+  const revenues = await Promise.all(
+    months.map(async (m) => {
+      const completed = await prisma.appointment.findMany({
+        where: { businessId, status: "COMPLETED", startAt: { gte: m.start, lt: m.end } },
+        select: { items: { select: { unitPrice: true } } },
+      });
+      return completed.reduce((sum, a) => sum + a.items.reduce((s, i) => s + Number(i.unitPrice), 0), 0);
+    }),
+  );
+
+  const maxRev = Math.max(...revenues, 1);
+
+  return (
+    <div className="mt-3 flex items-end gap-2 rounded-2xl border border-border/70 bg-card p-4" style={{ height: 200 }}>
+      {months.map((m, i) => (
+        <div key={m.label} className="flex flex-1 flex-col items-center gap-1">
+          <div className="text-[10px] tabular-nums text-muted-foreground">{formatEuros(revenues[i])}</div>
+          <div
+            className="w-full rounded-t-md bg-primary transition-all"
+            style={{ height: `${Math.max((revenues[i] / maxRev) * 120, 2)}px` }}
+          />
+          <div className="text-[10px] text-muted-foreground">{m.label}</div>
+        </div>
+      ))}
     </div>
   );
 }

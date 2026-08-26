@@ -55,6 +55,7 @@ export default async function AdminAgendaPage({
       where: {
         businessId: user.businessId,
         startAt: { gte: dayStart, lt: dayEnd },
+        client: { phoneEnc: { not: null } },
       },
       include: {
         client: { select: { name: true, phoneEnc: true } },

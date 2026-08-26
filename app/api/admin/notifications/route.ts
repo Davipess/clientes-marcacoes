@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     where: {
       businessId: guard.businessId,
       createdAt: { gte: since },
+      client: { phoneEnc: { not: null } },
     },
     select: {
       id: true,
