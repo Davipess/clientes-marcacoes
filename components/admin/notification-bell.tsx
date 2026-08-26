@@ -58,24 +58,15 @@ export function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  const markRead = async (id: string) => {
+  const markAllRead = async () => {
+    // Tell server to record this moment as "last read"
     await fetch("/api/admin/notifications", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({}),
     });
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  };
-
-  const markAllRead = async () => {
-    for (const n of notifications.filter((x) => !x.read)) {
-      await fetch("/api/admin/notifications", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: n.id }),
-      });
-    }
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    // Reload to get updated read states from server
+    await load();
   };
 
   const panel = open ? (
@@ -89,7 +80,7 @@ export function NotificationBell() {
           {unread > 0 && (
             <button
               type="button"
-              onClick={markAllRead}
+              onClick={() => void markAllRead()}
               className="text-xs text-primary hover:underline"
             >
               Marcar tudo como lido
@@ -116,7 +107,6 @@ export function NotificationBell() {
               key={n.id}
               type="button"
               onClick={() => {
-                markRead(n.id);
                 if (n.url) window.location.href = n.url;
                 setOpen(false);
               }}

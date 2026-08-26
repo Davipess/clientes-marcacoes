@@ -68,6 +68,7 @@ model BusinessSettings {
   noShowFlagThreshold       Int @default(2) // no-shows before the "at risk" badge
   retentionMonths           Int @default(1) // historico da marcacao apagado apos 1 mes
   contactRetentionDays      Int @default(7) // apagar nome/telefone apos a ultima visita
+  notificationsLastReadAt   DateTime? // ultima vez que o admin abriu as notificacoes
 
   // ── Editable site copy (white-label) ──
   // Keys with fallbacks in code; owner edits everything in the admin.
