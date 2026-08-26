@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "./notification-bell";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { setLocale } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 
 const LINKS = [
   { href: "/admin", label: "Início" },
@@ -46,6 +49,7 @@ export default function AdminNav() {
           })}
         </div>
         <NotificationBell />
+        <LanguageSwitcher onSwitch={(locale: Locale) => setLocale(locale)} />
       </div>
     </nav>
   );

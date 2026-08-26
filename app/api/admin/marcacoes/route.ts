@@ -4,6 +4,7 @@ import { createAppointment } from "@/lib/booking/create-appointment";
 import { cancelAppointment, rescheduleAppointment } from "@/lib/booking/modify-appointment";
 import { audit } from "@/lib/audit";
 import { minimizeClientIfNoFuture } from "@/lib/retention";
+import { earnPoints } from "@/lib/loyalty";
 import { phoneSchema } from "@/lib/validation";
 import { mutationLimit } from "@/lib/rate-limit";
 import { z } from "zod";
@@ -134,6 +135,16 @@ export async function PATCH(request: Request) {
         ]
       : []),
   ]);
+
+  // Earn loyalty points on completion (1 point per service)
+  if (action === "COMPLETED") {
+    const items = await prisma.appointmentItem.findMany({
+      where: { appointmentId: appointment.id },
+    });
+    if (items.length > 0) {
+      await earnPoints(guard.businessId, appointment.clientId, appointment.id, items.length).catch(() => {});
+    }
+  }
 
   if (action === "NO_SHOW") {
     await audit(guard.businessId, guard.email, "appointment.no_show", appointment.id);

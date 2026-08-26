@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { mutationLimit } from "@/lib/rate-limit";
 import { requireStaff } from "@/lib/staff-guard";
 import { minimizeClientIfNoFuture } from "@/lib/retention";
+import { earnPoints } from "@/lib/loyalty";
 import { z } from "zod";
 
 const patchSchema = z.object({
@@ -52,6 +53,16 @@ export async function PATCH(request: Request) {
         ]
       : []),
   ]);
+
+  // Earn loyalty points on completion (1 point per service)
+  if (action === "COMPLETED") {
+    const items = await prisma.appointmentItem.findMany({
+      where: { appointmentId: appointment.id },
+    });
+    if (items.length > 0) {
+      await earnPoints(guard.businessId, appointment.clientId, appointment.id, items.length).catch(() => {});
+    }
+  }
 
   await minimizeClientIfNoFuture(appointment.clientId);
   return Response.json({ ok: true });

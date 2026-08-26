@@ -12,6 +12,8 @@ import {
 } from "@/lib/format";
 import type { PublicCategory, PublicStaff } from "@/lib/public-data";
 import { ClientPushPrompt } from "./client-push-prompt";
+import { ClientLoyaltyPrompt } from "./client-loyalty-prompt";
+import { WaitlistJoin } from "./waitlist-join";
 
 type Props = {
   categories: PublicCategory[];
@@ -19,6 +21,7 @@ type Props = {
   timezone: string;
   cancellationPolicyText: string;
   initialServiceId?: string;
+  businessId: string;
 };
 
 const STEP_LABELS = ["Serviços", "Profissional", "Data e hora", "Os seus dados", "Confirmar"];
@@ -66,6 +69,7 @@ export function BookingWizard({
   timezone,
   cancellationPolicyText,
   initialServiceId,
+  businessId,
 }: Props) {
   const [step, setStep] = useState(initialServiceId ? 1 : 0);
   const [selectedIds, setSelectedIds] = useState<string[]>(
@@ -268,6 +272,9 @@ export function BookingWizard({
         </p>
         <div className="mt-5">
           <ClientPushPrompt />
+        </div>
+        <div className="mt-3">
+          <ClientLoyaltyPrompt />
         </div>
         <Button asChild variant="outline" className="mt-7 rounded-full">
           <Link href="/">Voltar à página inicial</Link>
@@ -503,9 +510,18 @@ export function BookingWizard({
                 </p>
               )}
               {!loadingSlots && dateStr && slotsByDay[dateStr]?.length === 0 && (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  Sem horários neste dia. Experimente outro.
-                </p>
+                <div className="space-y-4 py-4">
+                  <p className="text-center text-sm text-muted-foreground">
+                    Sem horários neste dia. Experimente outro.
+                  </p>
+                  {selectedIds.length > 0 && (
+                    <WaitlistJoin
+                      businessId={businessId}
+                      serviceId={selectedIds[0]}
+                      preferredDate={dateStr}
+                    />
+                  )}
+                </div>
               )}
               {!loadingSlots && (
                 <div className="mt-4 text-center">

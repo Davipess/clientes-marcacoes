@@ -34,6 +34,7 @@ export default async function MarcarPage({
           "Pode cancelar ou alterar a sua marcação gratuitamente até 24 horas antes."
         }
         initialServiceId={typeof servico === "string" ? servico : undefined}
+        businessId={data.business.id}
       />
     </div>
   );
