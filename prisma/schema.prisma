@@ -38,7 +38,6 @@ model Business {
   loyaltyRewards  LoyaltyReward[]
   loyaltyTransactions LoyaltyTransaction[]
   waitlistEntries WaitlistEntry[]
-  recurringRules  RecurringRule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -143,7 +142,6 @@ model Staff {
   timeOff      TimeOff[] // vacations / days off
   appointments Appointment[]
   blocks       AvailabilityException[]
-  recurringRules RecurringRule[]
 
   @@map("staff")
 }
@@ -247,7 +245,6 @@ model Client {
   loyaltyCards LoyaltyCard[]
   loyaltyTransactions LoyaltyTransaction[]
   waitlistEntries WaitlistEntry[]
-  recurringRules RecurringRule[]
 
   @@unique([businessId, phoneHash]) // identity per business
   @@map("clients")
@@ -399,19 +396,21 @@ model AuditLog {
 }
 
 model PushSubscription {
-  id           String @id @default(cuid())
-  businessId   String
-  business     Business @relation(fields: [businessId], references: [id])
-  userId       String?
-  user         User?   @relation(fields: [userId], references: [id])
-  endpoint     String
-  p256dh       String
-  auth         String
-  userAgent    String?
-  createdAt    DateTime @default(now())
+  id               String @id @default(cuid())
+  businessId       String
+  business         Business @relation(fields: [businessId], references: [id])
+  userId           String?
+  user             User?   @relation(fields: [userId], references: [id])
+  clientPhoneHash  String? // for unauthenticated client subscriptions
+  endpoint         String
+  p256dh           String
+  auth             String
+  userAgent        String?
+  createdAt        DateTime @default(now())
 
   @@unique([endpoint])
   @@index([businessId])
+  @@index([businessId, clientPhoneHash])
   @@map("push_subscriptions")
 }
 
@@ -483,29 +482,4 @@ model WaitlistEntry {
 
   @@index([businessId, status])
   @@map("waitlist_entries")
-}
-
-// ── Recurring bookings ──────────────────────────────────────────
-model RecurringRule {
-  id           String  @id @default(cuid())
-  businessId   String
-  business     Business @relation(fields: [businessId], references: [id])
-  clientId     String
-  client       Client  @relation(fields: [clientId], references: [id])
-  staffId      String
-  staff        Staff   @relation(fields: [staffId], references: [id])
-  serviceIds   String[] // array of service IDs
-  frequency    String   // "weekly", "biweekly", "monthly"
-  dayOfWeek    Int?     // 0=Sun, 1=Mon, ... 6=Sat (for weekly/biweekly)
-  dayOfMonth   Int?     // 1-31 (for monthly)
-  timeOfDay    String   // "HH:MM"
-  startDate    DateTime
-  endDate      DateTime? // null = indefinite
-  active       Boolean  @default(true)
-  lastGenerated DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([businessId, active])
-  @@map("recurring_rules")
 }

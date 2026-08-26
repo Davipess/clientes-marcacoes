@@ -271,10 +271,16 @@ export function BookingWizard({
           esquecer. Pagamento efetuado no local.
         </p>
         <div className="mt-5">
-          <ClientPushPrompt />
+          <ClientPushPrompt
+            businessId={businessId}
+            phone={clientDetails?.telefone ?? ""}
+          />
         </div>
         <div className="mt-3">
-          <ClientLoyaltyPrompt />
+          <ClientLoyaltyPrompt
+            businessId={businessId}
+            phone={clientDetails?.telefone ?? ""}
+          />
         </div>
         <Button asChild variant="outline" className="mt-7 rounded-full">
           <Link href="/">Voltar à página inicial</Link>

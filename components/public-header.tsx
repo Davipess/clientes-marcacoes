@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { setLocale } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
 
 interface PublicHeaderProps {
   name: string;
@@ -11,6 +10,8 @@ interface PublicHeaderProps {
 }
 
 export function PublicHeader({ name, logoUrl }: PublicHeaderProps) {
+  const { t } = useI18n();
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
@@ -30,15 +31,15 @@ export function PublicHeader({ name, logoUrl }: PublicHeaderProps) {
             href="/servicos"
             className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            Serviços
+            {t("nav.services")}
           </Link>
           <Link
             href="/marcar"
             className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:brightness-110 active:scale-[0.98]"
           >
-            Marcar
+            {t("booking.title")}
           </Link>
-          <LanguageSwitcher onSwitch={(locale: Locale) => setLocale(locale)} />
+          <LanguageSwitcher />
         </nav>
       </div>
     </header>

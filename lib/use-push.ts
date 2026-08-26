@@ -36,7 +36,7 @@ export function usePushSubscription() {
     return () => { cancelled = true; };
   }, []);
 
-  const subscribe = useCallback(async (vapidPublicKey: string) => {
+  const subscribe = useCallback(async (vapidPublicKey: string, extra?: { businessId?: string; phone?: string }) => {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
@@ -49,6 +49,7 @@ export function usePushSubscription() {
       body: JSON.stringify({
         endpoint: json.endpoint,
         keys: json.keys,
+        ...extra,
       }),
     });
     setSubscribed(true);

@@ -28,6 +28,6 @@ export async function PATCH(request: Request) {
     return Response.json({ error: "Dados inválidos." }, { status: 400 });
   }
 
-  await cancelWaitlistEntry(parsed.data.id);
+  await cancelWaitlistEntry(parsed.data.id, guard.businessId);
   return Response.json({ ok: true });
 }

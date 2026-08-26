@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { getAuthUser, isSameOrigin } from "@/lib/auth";
+import { getAuthUser, isSameOrigin, SESSION_COOKIE } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/crypto";
 import { passwordSchema } from "@/lib/validation";
 import { cookies } from "next/headers";
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   }
 
   const cookieStore = await cookies();
-  const currentToken = cookieStore.get("sessao")?.value;
+  const currentToken = cookieStore.get(SESSION_COOKIE)?.value;
 
   await prisma.$transaction([
     prisma.user.update({

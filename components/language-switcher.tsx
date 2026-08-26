@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Globe } from "lucide-react";
-import type { Locale } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
 
-export function LanguageSwitcher({ onSwitch }: { onSwitch: (locale: Locale) => void }) {
+export function LanguageSwitcher() {
+  const { locale, setLocale } = useI18n();
   const [open, setOpen] = useState(false);
 
   return (
@@ -18,18 +19,22 @@ export function LanguageSwitcher({ onSwitch }: { onSwitch: (locale: Locale) => v
         <Globe className="h-5 w-5" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-32 rounded-xl border bg-white shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-36 rounded-xl border bg-white shadow-lg">
           <button
             type="button"
-            onClick={() => { onSwitch("pt"); setOpen(false); }}
-            className="w-full px-4 py-2 text-left text-sm hover:bg-muted/50 rounded-t-xl"
+            onClick={() => { setLocale("pt"); setOpen(false); }}
+            className={`w-full px-4 py-2 text-left text-sm rounded-t-xl ${
+              locale === "pt" ? "bg-muted font-medium" : "hover:bg-muted/50"
+            }`}
           >
             🇵🇹 Português
           </button>
           <button
             type="button"
-            onClick={() => { onSwitch("en"); setOpen(false); }}
-            className="w-full px-4 py-2 text-left text-sm hover:bg-muted/50 rounded-b-xl"
+            onClick={() => { setLocale("en"); setOpen(false); }}
+            className={`w-full px-4 py-2 text-left text-sm rounded-b-xl ${
+              locale === "en" ? "bg-muted font-medium" : "hover:bg-muted/50"
+            }`}
           >
             🇬🇧 English
           </button>

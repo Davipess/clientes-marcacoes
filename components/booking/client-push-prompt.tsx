@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { usePushSubscription } from "@/lib/use-push";
 
-export function ClientPushPrompt() {
+export function ClientPushPrompt({
+  businessId,
+  phone,
+}: {
+  businessId: string;
+  phone: string;
+}) {
   const { supported, subscribed, loading, subscribe } = usePushSubscription();
   const [asked, setAsked] = useState(false);
 
@@ -20,7 +26,7 @@ export function ClientPushPrompt() {
           try {
             const res = await fetch("/api/push/vapid-key");
             const { key } = await res.json();
-            await subscribe(key);
+            await subscribe(key, { businessId, phone });
           } catch { /* silent */ }
           setAsked(true);
         }}

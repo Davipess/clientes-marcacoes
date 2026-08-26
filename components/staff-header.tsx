@@ -1,23 +1,24 @@
 "use client";
 
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { setLocale } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
 
 export function StaffHeader() {
+  const { t } = useI18n();
+
   return (
     <header className="border-b border-neutral-200 bg-white">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-        <span className="font-semibold">Área do colaborador</span>
+        <span className="font-semibold">{t("nav.team")}</span>
         <div className="flex items-center gap-2">
-          <LanguageSwitcher onSwitch={(locale: Locale) => setLocale(locale)} />
+          <LanguageSwitcher />
           <form action="/api/auth/logout" method="post">
             <button
               type="submit"
               formAction="/api/auth/logout"
               className="text-sm text-neutral-500 hover:text-neutral-900"
             >
-              Sair
+              {t("nav.logout")}
             </button>
           </form>
         </div>

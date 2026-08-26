@@ -97,13 +97,15 @@ export async function minimizeStaleContacts(): Promise<number> {
 
 /**
  * Data-retention sweep (Phase 14): deletes final-state appointments older
- * than the configurable retention period. The client row and its no-show
- * counter are intentionally preserved — the counter outlives the records.
+ * than the configurable retention period. Also cleans up loyalty data,
+ * waitlist entries, and push subscriptions for minimized clients.
  * Run periodically: `npm run retention` (cron / Netlify Scheduled Function).
  */
 export async function runRetentionCleanup(): Promise<{
   deletedAppointments: number;
   deletedNotifications: number;
+  deletedLoyalty: number;
+  deletedWaitlist: number;
 }> {
   const settingsList = await prisma.businessSettings.findMany({
     select: { businessId: true, retentionMonths: true },
@@ -111,11 +113,14 @@ export async function runRetentionCleanup(): Promise<{
 
   let deletedAppointments = 0;
   let deletedNotifications = 0;
+  let deletedLoyalty = 0;
+  let deletedWaitlist = 0;
 
   for (const settings of settingsList) {
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - settings.retentionMonths);
 
+    // 1. Delete old appointments
     const old = await prisma.appointment.findMany({
       where: {
         businessId: settings.businessId,
@@ -124,21 +129,54 @@ export async function runRetentionCleanup(): Promise<{
       },
       select: { id: true },
     });
-    if (old.length === 0) continue;
 
-    const ids = old.map((a) => a.id);
+    if (old.length > 0) {
+      const ids = old.map((a) => a.id);
 
-    // Notification logs reference appointments; clean them first.
-    const notif = await prisma.notificationLog.deleteMany({
-      where: { appointmentId: { in: ids } },
+      const notif = await prisma.notificationLog.deleteMany({
+        where: { appointmentId: { in: ids } },
+      });
+      deletedNotifications += notif.count;
+
+      const res = await prisma.appointment.deleteMany({
+        where: { id: { in: ids } },
+      });
+      deletedAppointments += res.count;
+    }
+
+    // 2. Clean up loyalty data for minimized clients (phoneEnc = null)
+    const minimizedClients = await prisma.client.findMany({
+      where: {
+        businessId: settings.businessId,
+        phoneEnc: null,
+        name: "Cliente (histórico)",
+      },
+      select: { id: true },
     });
-    deletedNotifications += notif.count;
 
-    const res = await prisma.appointment.deleteMany({
-      where: { id: { in: ids } },
+    for (const client of minimizedClients) {
+      const loyaltyTx = await prisma.loyaltyTransaction.deleteMany({
+        where: { clientId: client.id },
+      });
+      deletedLoyalty += loyaltyTx.count;
+
+      await prisma.loyaltyCard.deleteMany({
+        where: { clientId: client.id },
+      });
+    }
+
+    // 3. Clean up old waitlist entries (older than retention period)
+    const oldWaitlist = await prisma.waitlistEntry.deleteMany({
+      where: {
+        businessId: settings.businessId,
+        createdAt: { lt: cutoff },
+      },
     });
-    deletedAppointments += res.count;
+    deletedWaitlist += oldWaitlist.count;
+
+    // 4. Clean up push subscriptions for minimized clients
+    // Handled lazily in sendPushToUser/sendPushToBusiness (404/410 cleanup)
   }
 
-  return { deletedAppointments, deletedNotifications };
+  return { deletedAppointments, deletedNotifications, deletedLoyalty, deletedWaitlist };
 }

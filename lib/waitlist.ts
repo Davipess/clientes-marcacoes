@@ -69,11 +69,11 @@ export async function notifyWaitlist(
 }
 
 /**
- * Cancel a waitlist entry.
+ * Cancel a waitlist entry (with business scoping).
  */
-export async function cancelWaitlistEntry(id: string) {
-  return prisma.waitlistEntry.update({
-    where: { id },
+export async function cancelWaitlistEntry(id: string, businessId: string) {
+  return prisma.waitlistEntry.updateMany({
+    where: { id, businessId },
     data: { status: "CANCELLED" },
   });
 }

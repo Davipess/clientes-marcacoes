@@ -1,6 +1,7 @@
 import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { parseHHMM } from "./time";
+import { notifyWaitlist } from "@/lib/waitlist";
 
 export type CancelResult =
   | { ok: true }
@@ -65,6 +66,19 @@ export async function cancelAppointment(
       cancellationReason: reason ?? (byClient ? "Cancelada pelo cliente" : null),
     },
   });
+
+  // Notify waitlist for the freed slot
+  const apptWithItems = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    select: { businessId: true, startAt: true, items: { select: { serviceId: true }, take: 1 } },
+  });
+  if (apptWithItems?.items[0]) {
+    notifyWaitlist(
+      apptWithItems.businessId,
+      apptWithItems.items[0].serviceId,
+      apptWithItems.startAt,
+    ).catch(() => {});
+  }
 
   return { ok: true };
 }

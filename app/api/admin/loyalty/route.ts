@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   });
 
   const rewards = await prisma.loyaltyReward.findMany({
-    where: { businessId: guard.businessId, active: true },
+    where: { businessId: guard.businessId },
     orderBy: { pointsCost: "asc" },
   });
 
@@ -25,9 +25,17 @@ export async function GET(request: Request) {
 }
 
 const bonusSchema = z.object({
+  action: z.literal("bonus"),
   clientId: z.string().min(1),
   points: z.number().int().min(1).max(100),
   reason: z.string().min(1).max(100),
+});
+
+const createRewardSchema = z.object({
+  action: z.literal("createReward"),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  pointsCost: z.number().int().min(1).max(10000),
 });
 
 export async function POST(request: Request) {
@@ -35,17 +43,95 @@ export async function POST(request: Request) {
   if (!guard.ok) return guard.response;
 
   const body = await request.json().catch(() => null);
-  const parsed = bonusSchema.safeParse(body);
+
+  // Try bonus action first
+  const bonusParsed = bonusSchema.safeParse(body);
+  if (bonusParsed.success) {
+    const result = await bonusPoints(
+      guard.businessId,
+      bonusParsed.data.clientId,
+      bonusParsed.data.points,
+      bonusParsed.data.reason,
+    );
+    return Response.json({ ok: true, newBalance: result.newBalance });
+  }
+
+  // Try create reward action
+  const rewardParsed = createRewardSchema.safeParse(body);
+  if (rewardParsed.success) {
+    const reward = await prisma.loyaltyReward.create({
+      data: {
+        businessId: guard.businessId,
+        name: rewardParsed.data.name,
+        description: rewardParsed.data.description ?? null,
+        pointsCost: rewardParsed.data.pointsCost,
+      },
+    });
+    return Response.json({ ok: true, id: reward.id }, { status: 201 });
+  }
+
+  return Response.json({ error: "Dados inválidos." }, { status: 400 });
+}
+
+const updateRewardSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
+  pointsCost: z.number().int().min(1).max(10000).optional(),
+  active: z.boolean().optional(),
+});
+
+export async function PUT(request: Request) {
+  const guard = await requireAdmin(request);
+  if (!guard.ok) return guard.response;
+
+  const body = await request.json().catch(() => null);
+  const parsed = updateRewardSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json({ error: "Dados inválidos." }, { status: 400 });
   }
 
-  const result = await bonusPoints(
-    guard.businessId,
-    parsed.data.clientId,
-    parsed.data.points,
-    parsed.data.reason,
-  );
+  const { id, ...data } = parsed.data;
 
-  return Response.json({ ok: true, newBalance: result.newBalance });
+  // Verify ownership
+  const existing = await prisma.loyaltyReward.findFirst({
+    where: { id, businessId: guard.businessId },
+  });
+  if (!existing) {
+    return Response.json({ error: "Recompensa não encontrada." }, { status: 404 });
+  }
+
+  const reward = await prisma.loyaltyReward.update({
+    where: { id },
+    data,
+  });
+
+  return Response.json({ ok: true, reward });
+}
+
+export async function DELETE(request: Request) {
+  const guard = await requireAdmin(request);
+  if (!guard.ok) return guard.response;
+
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+  if (!id) {
+    return Response.json({ error: "ID obrigatório." }, { status: 400 });
+  }
+
+  // Verify ownership
+  const existing = await prisma.loyaltyReward.findFirst({
+    where: { id, businessId: guard.businessId },
+  });
+  if (!existing) {
+    return Response.json({ error: "Recompensa não encontrada." }, { status: 404 });
+  }
+
+  // Soft delete - just deactivate
+  await prisma.loyaltyReward.update({
+    where: { id },
+    data: { active: false },
+  });
+
+  return Response.json({ ok: true });
 }
