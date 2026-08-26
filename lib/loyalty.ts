@@ -43,7 +43,7 @@ export async function earnPoints(
 }
 
 /**
- * Redeem points for a reward.
+ * Redeem points for a reward — creates a voucher the client can use later.
  */
 export async function redeemReward(
   businessId: string,
@@ -74,9 +74,41 @@ export async function redeemReward(
         reason: "reward_redeemed",
       },
     }),
+    prisma.loyaltyVoucher.create({
+      data: {
+        businessId,
+        clientId,
+        rewardName: reward.name,
+        pointsCost: reward.pointsCost,
+      },
+    }),
   ]);
 
   return { ok: true, newBalance: card.points - reward.pointsCost };
+}
+
+/**
+ * Use a voucher — client marks it as used in front of the owner.
+ */
+export async function useVoucher(
+  businessId: string,
+  clientId: string,
+  voucherId: string,
+) {
+  const voucher = await prisma.loyaltyVoucher.findFirst({
+    where: { id: voucherId, businessId, clientId, status: "ACTIVE" },
+  });
+
+  if (!voucher) {
+    return { ok: false, message: "Vale não encontrado ou já utilizado." };
+  }
+
+  await prisma.loyaltyVoucher.update({
+    where: { id: voucherId },
+    data: { status: "USED", usedAt: new Date() },
+  });
+
+  return { ok: true };
 }
 
 /**

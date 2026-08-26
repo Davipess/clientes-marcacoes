@@ -37,6 +37,7 @@ model Business {
   loyaltyCards    LoyaltyCard[]
   loyaltyRewards  LoyaltyReward[]
   loyaltyTransactions LoyaltyTransaction[]
+  loyaltyVouchers LoyaltyVoucher[]
   waitlistEntries WaitlistEntry[]
 
   createdAt DateTime @default(now())
@@ -244,6 +245,7 @@ model Client {
   reviews      Review[]
   loyaltyCards LoyaltyCard[]
   loyaltyTransactions LoyaltyTransaction[]
+  loyaltyVouchers LoyaltyVoucher[]
   waitlistEntries WaitlistEntry[]
 
   @@unique([businessId, phoneHash]) // identity per business
@@ -461,6 +463,23 @@ model LoyaltyTransaction {
 
   @@index([businessId, clientId])
   @@map("loyalty_transactions")
+}
+
+// ── Loyalty vouchers (redeemed rewards) ────────────────────────
+model LoyaltyVoucher {
+  id           String  @id @default(cuid())
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
+  clientId     String
+  client       Client  @relation(fields: [clientId], references: [id])
+  rewardName   String
+  pointsCost   Int
+  status       String  @default("ACTIVE") // ACTIVE, USED
+  usedAt       DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([businessId, clientId, status])
+  @@map("loyalty_vouchers")
 }
 
 // ── Waitlist ─────────────────────────────────────────────────────

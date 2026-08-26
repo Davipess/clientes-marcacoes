@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from "react";
 
+interface Voucher {
+  id: string;
+  rewardName: string;
+  pointsCost: number;
+}
+
 interface LoyaltyData {
   points: number;
   totalEarned: number;
   rewards: { id: string; name: string; pointsCost: number }[];
+  vouchers: Voucher[];
 }
 
 export function ClientLoyaltyPrompt({
@@ -32,7 +39,6 @@ export function ClientLoyaltyPrompt({
   if (loading) return null;
   if (!data) return null;
 
-  // Find next reward
   const nextReward = data.rewards.find((r) => r.pointsCost > data.points);
   const progress = nextReward
     ? Math.min((data.points / nextReward.pointsCost) * 100, 100)
@@ -40,7 +46,7 @@ export function ClientLoyaltyPrompt({
 
   return (
     <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-center">
-      <p className="text-sm font-medium">🎉 Programa de Fidelização</p>
+      <p className="text-sm font-medium">Programa de Fidelização</p>
       <div className="mt-2">
         <span className="text-3xl font-bold text-primary">{data.points}</span>
         <span className="ml-1 text-sm text-muted-foreground">pontos</span>
@@ -61,6 +67,16 @@ export function ClientLoyaltyPrompt({
           <p className="mt-1 text-xs text-muted-foreground">
             {data.points} / {nextReward.pointsCost} para{" "}
             <strong>{nextReward.name}</strong>
+          </p>
+        </div>
+      )}
+      {data.vouchers.length > 0 && (
+        <div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 p-2">
+          <p className="text-xs font-medium text-amber-800">
+            Tem {data.vouchers.length} vale(s) ativo(s)!
+          </p>
+          <p className="text-xs text-amber-700">
+            Apresente-o à dona do salão e utilize na sua presença.
           </p>
         </div>
       )}

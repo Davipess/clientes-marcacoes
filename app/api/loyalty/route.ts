@@ -25,35 +25,39 @@ export async function GET(request: Request) {
   });
 
   if (!client) {
-    return Response.json({ points: 0, totalEarned: 0, rewards: [] });
+    return Response.json({ points: 0, totalEarned: 0, rewards: [], vouchers: [] });
   }
 
   const loyaltyCard = await prisma.loyaltyCard.findUnique({
     where: { businessId_clientId: { businessId: parsed.data.businessId, clientId: client.id } },
-    include: {
-      transactions: {
-        orderBy: { createdAt: "desc" },
-        take: 10,
-        select: { points: true, reason: true, createdAt: true },
-      },
-    },
   });
 
-  if (!loyaltyCard) {
-    return Response.json({ points: 0, totalEarned: 0, rewards: [] });
-  }
-
-  // Get available rewards
+  // Get active rewards
   const rewards = await prisma.loyaltyReward.findMany({
     where: { businessId: parsed.data.businessId, active: true },
     select: { id: true, name: true, description: true, pointsCost: true },
     orderBy: { pointsCost: "asc" },
   });
 
+  // Get active vouchers
+  const vouchers = await prisma.loyaltyVoucher.findMany({
+    where: {
+      businessId: parsed.data.businessId,
+      clientId: client.id,
+      status: "ACTIVE",
+    },
+    select: { id: true, rewardName: true, pointsCost: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!loyaltyCard) {
+    return Response.json({ points: 0, totalEarned: 0, rewards, vouchers });
+  }
+
   return Response.json({
     points: loyaltyCard.points,
     totalEarned: loyaltyCard.totalEarned,
-    transactions: loyaltyCard.transactions,
     rewards,
+    vouchers,
   });
 }

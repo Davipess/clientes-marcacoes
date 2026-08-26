@@ -30,6 +30,10 @@ export default async function PontosPage() {
       <div className="mt-6">
         <LoyaltyLookup businessId={businessId} />
       </div>
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        Os seus pontos estão associados ao número de telemóvel. Se trocou de
+        número, contacte o salão para atualizar os seus dados.
+      </p>
     </div>
   );
 }
