@@ -142,7 +142,7 @@ export async function PATCH(request: Request) {
       where: { appointmentId: appointment.id },
     });
     if (items.length > 0) {
-      await earnPoints(guard.businessId, appointment.clientId, appointment.id, items.length).catch(() => {});
+      await earnPoints(guard.businessId, appointment.clientId, appointment.id, items.length);
     }
   }
 

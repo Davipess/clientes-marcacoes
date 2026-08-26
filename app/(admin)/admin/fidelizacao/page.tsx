@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 import { RewardForm } from "@/components/admin/reward-form";
+import { RewardList } from "@/components/admin/reward-list";
 
 export const metadata: Metadata = { title: "Fidelização — Administração" };
 
@@ -52,47 +53,14 @@ export default async function FidelizacaoPage() {
       <section className="mt-8">
         <h2 className="font-heading text-lg font-semibold">Recompensas</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Crie recompensas que os clientes podem trocar com os seus pontos.
+          Crie e gere recompensas que os clientes podem trocar com os seus pontos.
         </p>
         <div className="mt-4">
           <RewardForm />
         </div>
-        {activeRewards.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">
-            Ainda não existem recompensas. Crie a primeira acima.
-          </p>
-        ) : (
-          <div className="mt-4 space-y-2">
-            {activeRewards.map((r) => (
-              <div key={r.id} className="flex items-center justify-between rounded-xl border bg-card p-4">
-                <div>
-                  <div className="font-medium">{r.name}</div>
-                  {r.description && (
-                    <div className="text-xs text-muted-foreground">{r.description}</div>
-                  )}
-                </div>
-                <div className="text-sm font-semibold text-primary">{r.pointsCost} pts</div>
-              </div>
-            ))}
-          </div>
-        )}
-        {rewards.some((r) => !r.active) && (
-          <details className="mt-4">
-            <summary className="cursor-pointer text-sm text-muted-foreground">
-              Recompensas inativas ({rewards.filter((r) => !r.active).length})
-            </summary>
-            <div className="mt-2 space-y-2">
-              {rewards
-                .filter((r) => !r.active)
-                .map((r) => (
-                  <div key={r.id} className="flex items-center justify-between rounded-xl border bg-card p-4 opacity-60">
-                    <div className="font-medium line-through">{r.name}</div>
-                    <div className="text-sm text-muted-foreground">{r.pointsCost} pts</div>
-                  </div>
-                ))}
-            </div>
-          </details>
-        )}
+        <div className="mt-4">
+          <RewardList rewards={rewards} />
+        </div>
       </section>
     </div>
   );

@@ -3,24 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "./notification-bell";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { useI18n } from "@/lib/i18n-context";
+
+const LINKS = [
+  { href: "/admin", label: "Início" },
+  { href: "/admin/agenda", label: "Agenda" },
+  { href: "/admin/servicos", label: "Serviços" },
+  { href: "/admin/equipa", label: "Equipa" },
+  { href: "/admin/clientes", label: "Clientes" },
+  { href: "/admin/fidelizacao", label: "Fidelização" },
+  { href: "/admin/lista-espera", label: "Espera" },
+  { href: "/admin/relatorios", label: "Relatórios" },
+  { href: "/admin/definicoes", label: "Definições" },
+];
 
 export default function AdminNav() {
   const pathname = usePathname();
-  const { t } = useI18n();
-
-  const LINKS = [
-    { href: "/admin", label: t("nav.home") },
-    { href: "/admin/agenda", label: t("nav.agenda") },
-    { href: "/admin/servicos", label: t("nav.services") },
-    { href: "/admin/equipa", label: t("nav.team") },
-    { href: "/admin/clientes", label: t("nav.clients") },
-    { href: "/admin/fidelizacao", label: t("nav.loyalty") },
-    { href: "/admin/lista-espera", label: t("nav.waitlist") },
-    { href: "/admin/relatorios", label: t("nav.reports") },
-    { href: "/admin/definicoes", label: t("nav.settings") },
-  ];
 
   return (
     <nav className="border-b border-border/60 bg-card">
@@ -48,7 +45,6 @@ export default function AdminNav() {
           })}
         </div>
         <NotificationBell />
-        <LanguageSwitcher />
       </div>
     </nav>
   );
