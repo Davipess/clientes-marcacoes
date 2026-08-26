@@ -1,12 +1,19 @@
 import { prisma } from "@/lib/db";
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   ctx: RouteContext<"/api/imagens/[id]">,
 ) {
   const { id } = await ctx.params;
-  const image = await prisma.image.findUnique({
-    where: { id },
+
+  const user = await getAuthUser();
+  if (!user?.businessId) {
+    return new Response("Não autorizado", { status: 401 });
+  }
+
+  const image = await prisma.image.findFirst({
+    where: { id, businessId: user.businessId },
     select: { mime: true, data: true },
   });
   if (!image) {

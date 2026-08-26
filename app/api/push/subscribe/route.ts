@@ -1,8 +1,15 @@
 import { prisma } from "@/lib/db";
 import { getAuthUser, isSameOrigin } from "@/lib/auth";
 import { piiLookupHash, normalizePhone } from "@/lib/crypto";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  // Rate limit: 5 subscribe attempts per minute per IP
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  if (!rateLimit(`push-subscribe:${ip}`, 5, 60_000).ok) {
+    return Response.json({ error: "Demasiados pedidos." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   if (!body?.endpoint || !body?.keys?.p256dh || !body?.keys?.auth) {
     return Response.json({ error: "Dados inválidos" }, { status: 400 });

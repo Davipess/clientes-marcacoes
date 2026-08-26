@@ -128,7 +128,7 @@ export async function DELETE(request: Request) {
     where: { id: client.id },
     data: {
       name: "Cliente anonimizado",
-      phoneEnc: "[apagado]",
+      phoneEnc: null,
       phoneHash: `anon-${client.id}-${Date.now()}`,
       emailEnc: null,
       emailHash: null,

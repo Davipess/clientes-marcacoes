@@ -36,7 +36,6 @@ export default async function ListaEsperaPage() {
                   {e.service.name} · {e.preferredDate.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "numeric" })}
                   {e.preferredTime ? ` · ${e.preferredTime}` : ""}
                 </div>
-                <div className="text-xs text-muted-foreground">{e.clientPhone}</div>
               </div>
               <div className="flex items-center gap-2">
                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${

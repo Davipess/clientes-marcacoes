@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { joinWaitlist } from "@/lib/waitlist";
 import { phoneSchema } from "@/lib/validation";
+import { piiLookupHash, normalizePhone } from "@/lib/crypto";
+import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const schema = z.object({
@@ -13,6 +15,12 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  // Rate limit: 5 waitlist joins per minute per IP
+  const limited = rateLimit(`waitlist:${request.headers.get("x-forwarded-for") ?? "unknown"}`, 5, 60_000);
+  if (!limited.ok) {
+    return Response.json({ error: "Demasiados pedidos." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -38,11 +46,13 @@ export async function POST(request: Request) {
     data: { status: "CANCELLED" },
   });
 
-  // Check for duplicate (same phone + service + date already waiting)
+  // Check for duplicate (same phone hash + service + date already waiting)
+  const phoneHash = piiLookupHash(normalizePhone(parsed.data.clientPhone));
   const existing = await prisma.waitlistEntry.findFirst({
     where: {
       businessId: parsed.data.businessId,
       serviceId: parsed.data.serviceId,
+      clientPhoneHash: phoneHash,
       status: "WAITING",
       preferredDate: {
         gte: new Date(new Date(parsed.data.preferredDate).setHours(0, 0, 0, 0)),

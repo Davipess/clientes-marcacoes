@@ -28,7 +28,11 @@ export function ClientLoyaltyPrompt({
   useEffect(() => {
     if (!businessId || !phone) return;
     let cancelled = false;
-    fetch(`/api/loyalty?businessId=${encodeURIComponent(businessId)}&phone=${encodeURIComponent(phone)}`)
+    fetch("/api/loyalty", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ businessId, phone }),
+    })
       .then((r) => r.json())
       .then((json) => { if (!cancelled) setData(json); })
       .catch(() => {})

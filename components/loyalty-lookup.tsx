@@ -28,6 +28,15 @@ export function LoyaltyLookup({ businessId }: { businessId: string }) {
   const [using, setUsing] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  async function fetchLoyalty() {
+    const res = await fetch("/api/loyalty", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ businessId, phone }),
+    });
+    return res.json();
+  }
+
   async function handleLookup(e: React.FormEvent) {
     e.preventDefault();
     if (!phone) return;
@@ -35,12 +44,9 @@ export function LoyaltyLookup({ businessId }: { businessId: string }) {
     setError(null);
     setSuccessMsg(null);
     try {
-      const res = await fetch(
-        `/api/loyalty?businessId=${encodeURIComponent(businessId)}&phone=${encodeURIComponent(phone)}`,
-      );
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.error ?? "Erro ao consultar.");
+      const json = await fetchLoyalty();
+      if (json.error) {
+        setError(json.error);
         return;
       }
       setData(json);
@@ -69,15 +75,11 @@ export function LoyaltyLookup({ businessId }: { businessId: string }) {
       }
       setSuccessMsg("Vale criado! Apresente-o à dona do salão quando chegar.");
       setData((prev) =>
-        prev
-          ? { ...prev, points: json.newBalance }
-          : prev,
+        prev ? { ...prev, points: json.newBalance } : prev,
       );
       // Refresh to get new voucher
-      const refresh = await fetch(
-        `/api/loyalty?businessId=${encodeURIComponent(businessId)}&phone=${encodeURIComponent(phone)}`,
-      );
-      if (refresh.ok) setData(await refresh.json());
+      const refresh = await fetchLoyalty();
+      if (!refresh.error) setData(refresh);
     } catch {
       setError("Erro de rede.");
     } finally {
@@ -101,11 +103,8 @@ export function LoyaltyLookup({ businessId }: { businessId: string }) {
         return;
       }
       setSuccessMsg("Vale utilizado com sucesso!");
-      // Refresh to remove used voucher
-      const refresh = await fetch(
-        `/api/loyalty?businessId=${encodeURIComponent(businessId)}&phone=${encodeURIComponent(phone)}`,
-      );
-      if (refresh.ok) setData(await refresh.json());
+      const refresh = await fetchLoyalty();
+      if (!refresh.error) setData(refresh);
     } catch {
       setError("Erro de rede.");
     } finally {

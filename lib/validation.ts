@@ -52,7 +52,7 @@ export const phoneSchema = z
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1).max(128),
+  password: z.string().min(8).max(128),
 });
 
 export const setupSchema = z.object({

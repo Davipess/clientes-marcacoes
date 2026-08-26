@@ -484,20 +484,21 @@ model LoyaltyVoucher {
 
 // ── Waitlist ─────────────────────────────────────────────────────
 model WaitlistEntry {
-  id           String  @id @default(cuid())
-  businessId   String
-  business     Business @relation(fields: [businessId], references: [id])
-  clientId     String?
-  client       Client?  @relation(fields: [clientId], references: [id])
-  clientName   String
-  clientPhone  String
-  serviceId    String
-  service      Service  @relation(fields: [serviceId], references: [id])
-  preferredDate DateTime
-  preferredTime String?  // "morning", "afternoon", or specific time
-  status       String   @default("WAITING") // WAITING, NOTIFIED, BOOKED, CANCELLED
-  notifiedAt   DateTime?
-  createdAt    DateTime @default(now())
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id])
+  clientId        String?
+  client          Client?  @relation(fields: [clientId], references: [id])
+  clientName      String
+  clientPhoneEnc  String?  // encrypted (AES-256-GCM)
+  clientPhoneHash String?  // HMAC for dedup lookup
+  serviceId       String
+  service         Service  @relation(fields: [serviceId], references: [id])
+  preferredDate   DateTime
+  preferredTime   String?  // "morning", "afternoon", or specific time
+  status          String   @default("WAITING") // WAITING, NOTIFIED, BOOKED, CANCELLED
+  notifiedAt      DateTime?
+  createdAt       DateTime @default(now())
 
   @@index([businessId, status])
   @@map("waitlist_entries")

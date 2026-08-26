@@ -66,6 +66,8 @@ const rescheduleSchema = z.object({
 export async function PUT(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/marcacoes");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = rescheduleSchema.safeParse(body);
@@ -74,10 +76,12 @@ export async function PUT(request: Request) {
   }
 
   // Admin reschedules bypass the client policy window but never the
-  // availability rules.
+  // availability rules. businessId scopes the lookup.
   const result = await rescheduleAppointment(
     parsed.data.id,
     new Date(parsed.data.inicio),
+    false,
+    guard.businessId,
   );
   if (!result.ok) {
     return Response.json({ error: result.message }, { status: result.code === "NOT_FOUND" ? 404 : 409 });

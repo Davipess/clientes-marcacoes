@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { sendPushToBusiness } from "@/lib/push";
+import { encryptPii, piiLookupHash, normalizePhone } from "@/lib/crypto";
 
 /**
  * Join the waitlist for a specific date/time.
@@ -13,12 +14,14 @@ export async function joinWaitlist(input: {
   preferredTime?: string;
   clientId?: string;
 }) {
+  const phoneHash = piiLookupHash(normalizePhone(input.clientPhone));
   return prisma.waitlistEntry.create({
     data: {
       businessId: input.businessId,
       clientId: input.clientId ?? null,
       clientName: input.clientName,
-      clientPhone: input.clientPhone,
+      clientPhoneEnc: encryptPii(input.clientPhone),
+      clientPhoneHash: phoneHash,
       serviceId: input.serviceId,
       preferredDate: input.preferredDate,
       preferredTime: input.preferredTime ?? null,

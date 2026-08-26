@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { bonusPoints } from "@/lib/loyalty";
+import { mutationLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 export async function GET(request: Request) {
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
   const cards = await prisma.loyaltyCard.findMany({
     where: { businessId: guard.businessId },
     include: {
-      client: { select: { id: true, name: true, phoneEnc: true } },
+      client: { select: { id: true, name: true } },
       transactions: { orderBy: { createdAt: "desc" }, take: 5 },
     },
     orderBy: { points: "desc" },
@@ -41,6 +42,8 @@ const createRewardSchema = z.object({
 export async function POST(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/loyalty");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
 
@@ -84,6 +87,8 @@ const updateRewardSchema = z.object({
 export async function PUT(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/loyalty");
+  if (limited) return limited;
 
   const body = await request.json().catch(() => null);
   const parsed = updateRewardSchema.safeParse(body);
@@ -112,6 +117,8 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  const limited = mutationLimit(request, "admin/loyalty");
+  if (limited) return limited;
 
   const url = new URL(request.url);
   const id = url.searchParams.get("id");

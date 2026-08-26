@@ -51,9 +51,7 @@ export async function cancelAppointment(
       return {
         ok: false,
         code: "POLICY",
-        message: `As marcações só podem ser canceladas até ${
-          appointment.business.settings?.cancellationWindowHours ?? 24
-        } horas antes. Contacte o salão, por favor.`,
+        message: "As marcações só podem ser canceladas com antecedência mínima. Contacte o salão, por favor.",
       };
     }
   }
@@ -92,9 +90,13 @@ export async function rescheduleAppointment(
   appointmentId: string,
   newStartAt: Date,
   byClient = false,
+  businessId?: string,
 ): Promise<RescheduleResult> {
-  const appointment = await prisma.appointment.findUnique({
-    where: { id: appointmentId },
+  const appointment = await prisma.appointment.findFirst({
+    where: {
+      id: appointmentId,
+      ...(businessId ? { businessId } : {}),
+    },
     select: {
       id: true,
       businessId: true,

@@ -12,8 +12,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "Dados inválidos" }, { status: 400 });
   }
 
+  // Scope deletion to the authenticated user's own subscriptions
   await prisma.pushSubscription.deleteMany({
-    where: { endpoint: body.endpoint },
+    where: { endpoint: body.endpoint, userId: user.id },
   });
 
   return Response.json({ ok: true });

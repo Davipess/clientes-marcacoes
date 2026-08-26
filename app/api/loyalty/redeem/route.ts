@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { piiLookupHash, normalizePhone } from "@/lib/crypto";
 import { redeemReward } from "@/lib/loyalty";
+import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const schema = z.object({
@@ -10,6 +11,12 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  // Rate limit: 3 redeems per minute per IP
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  if (!rateLimit(`loyalty-redeem:${ip}`, 3, 60_000).ok) {
+    return Response.json({ error: "Demasiados pedidos." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
