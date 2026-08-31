@@ -480,6 +480,16 @@ export function SettingsForm({
         </p>
       </section>
 
+      {/* Security */}
+      <section className="rounded-2xl border border-border/70 bg-card p-5">
+        <h2 className="font-heading text-lg font-semibold">Segurança</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Se suspeita que a sua conta foi comprometida, termine todas as sessões
+          em todos os dispositivos. Vai precisar de voltar a iniciar sessão.
+        </p>
+        <LogoutAllButton />
+      </section>
+
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={saving} className="rounded-full px-8">
           {saving ? "A guardar..." : "Guardar definições"}
@@ -492,6 +502,61 @@ export function SettingsForm({
         {error && <span className="text-sm text-destructive">{error}</span>}
       </div>
     </form>
+  );
+}
+
+function LogoutAllButton() {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function handle() {
+    if (!confirm) {
+      setConfirm(true);
+      return;
+    }
+    setPending(true);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/auth/logout-all", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setMsg(json.error ?? "Erro.");
+        return;
+      }
+      setMsg(`${json.destroyed} sessão(ões) terminada(s). Pode iniciar sessão novamente.`);
+      setConfirm(false);
+    } catch {
+      setMsg("Erro de rede.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="mt-3">
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className={`rounded-full ${
+          confirm ? "border-destructive text-destructive hover:bg-destructive hover:text-white" : ""
+        }`}
+        disabled={pending}
+        onClick={handle}
+      >
+        {pending
+          ? "A terminar sessões..."
+          : confirm
+            ? "Confirmar — terminar todas as sessões?"
+            : "Terminar todas as sessões"}
+      </Button>
+      {msg && <p className="mt-2 text-sm text-muted-foreground">{msg}</p>}
+    </div>
   );
 }
 

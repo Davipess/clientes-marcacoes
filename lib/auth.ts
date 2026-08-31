@@ -74,6 +74,13 @@ export async function destroySession(): Promise<void> {
   cookieStore.delete(SESSION_COOKIE);
 }
 
+export async function destroyAllSessions(userId: string): Promise<number> {
+  const result = await prisma.session.deleteMany({
+    where: { userId },
+  });
+  return result.count;
+}
+
 // CSRF defence for mutating requests: SameSite=Lax cookies already block
 // cross-site POSTs in modern browsers; this adds an explicit origin check.
 export function isSameOrigin(request: Request): boolean {

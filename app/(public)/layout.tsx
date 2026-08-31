@@ -18,7 +18,7 @@ export default async function PublicLayout({
   children: React.ReactNode;
 }) {
   const data = await getPublicData();
-  const name = data?.business.name ?? "Salão";
+  const name = data?.business.name ?? "Lenia Ferreira";
 
   return (
     <div

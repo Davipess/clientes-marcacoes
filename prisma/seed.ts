@@ -1,6 +1,10 @@
 import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../lib/generated/prisma/client";
 import { hashPassword } from "../lib/crypto";
-import { prisma } from "../lib/db";
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   let business = await prisma.business.findFirst();
@@ -8,7 +12,7 @@ async function main() {
     business = await prisma.business.create({
       data: {
         slug: "salao-exemplo",
-        name: "Salão Exemplo",
+        name: "Lenia Ferreira",
         address: "Rua Exemplo, 123, Lisboa",
         phone: "+351 900 000 000",
         email: "geral@salaoexemplo.pt",
