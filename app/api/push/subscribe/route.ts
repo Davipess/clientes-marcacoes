@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return Response.json({ ok: true });
   }
 
-  // Unauthenticated client — requires same-origin + businessId + phone
+  // Unauthenticated client, requires same-origin + businessId + phone
   if (!isSameOrigin(request)) {
     return Response.json({ error: "Pedido inválido" }, { status: 403 });
   }

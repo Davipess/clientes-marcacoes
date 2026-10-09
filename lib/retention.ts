@@ -14,7 +14,7 @@ export async function minimizeClientIfNoFuture(clientId: string): Promise<void> 
       startAt: { gt: new Date() },
     },
   });
-  if (future > 0) return; // ainda tem marcacoes ativas — manter contacto
+  if (future > 0) return; // ainda tem marcacoes ativas, manter contacto
 
   await prisma.client.updateMany({
     where: { id: clientId, phoneHash: { not: { startsWith: "anon-" } } },
@@ -74,7 +74,7 @@ export async function minimizeStaleContacts(): Promise<number> {
 
     for (const client of stale) {
       const last = client.appointments[0];
-      if (!last) continue; // nunca visitou — manter contacto ate primeira visita
+      if (!last) continue; // nunca visitou, manter contacto ate primeira visita
       // Data relevante de fim: cancelamento (se existir) ou fim da marcação.
       const endedAt = last.cancelledAt ?? last.endAt;
       if (endedAt.getTime() > cutoff.getTime()) continue; // ainda dentro do prazo

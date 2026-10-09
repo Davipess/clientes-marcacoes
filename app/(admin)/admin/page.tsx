@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { nowZoned, zonedToUtc } from "@/lib/booking/time";
 import { formatEuros } from "@/lib/format";
 
-export const metadata: Metadata = { title: "Início — Administração" };
+export const metadata: Metadata = { title: "Início, Administração" };
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Pendente",

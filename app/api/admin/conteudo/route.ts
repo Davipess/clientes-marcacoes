@@ -42,7 +42,7 @@ export async function PUT(request: Request) {
   });
   if (!settings) {
     return Response.json(
-      { error: "Definições em falta — guarde primeiro as Definições gerais." },
+      { error: "Definições em falta, guarde primeiro as Definições gerais." },
       { status: 400 },
     );
   }

@@ -15,8 +15,8 @@ type NotifyInput = {
 /**
  * Queues a notification for the client. Delivery channels are pluggable:
  * none is active today because the product is 100% free (no SMS costs,
- * clients have no email on file). When a free channel is adopted — e.g.
- * WhatsApp Business Cloud API service conversations — implement a sender
+ * clients have no email on file). When a free channel is adopted, e.g.
+ * WhatsApp Business Cloud API service conversations, implement a sender
  * and flip the channel; history and retry logic already live in
  * NotificationLog.
  */
@@ -42,7 +42,7 @@ export async function queueNotification(input: NotifyInput): Promise<void> {
   });
 }
 
-/** Reminder sweep — call from a scheduled job (Netlify Scheduled Function). */
+/** Reminder sweep, call from a scheduled job (Netlify Scheduled Function). */
 export async function queueDueReminders(): Promise<number> {
   const settingsList = await prisma.businessSettings.findMany({
     select: {
@@ -103,7 +103,7 @@ export async function queueDueReminders(): Promise<number> {
       // Push to business owner/staff
       if (appt.staff?.userId) {
         await sendPushToUser(appt.staff.userId, {
-          title: "Lembrete — marcação em 1h",
+          title: "Lembrete, marcação em 1h",
           body: `${serviceNames} às ${timeStr}`,
           url: "/admin/agenda",
           tag: `reminder-${appt.id}`,

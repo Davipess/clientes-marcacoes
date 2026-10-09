@@ -117,7 +117,7 @@ const DEFAULT_CONTENT: SiteContent = {
     },
     {
       title: "À sua medida",
-      text: "Combine vários serviços numa só visita — tudo no horário que lhe der jeito.",
+      text: "Combine vários serviços numa só visita, tudo no horário que lhe der jeito.",
     },
     {
       title: "Sem complicações",
@@ -149,7 +149,7 @@ export function parseSiteContent(raw: unknown): SiteContent {
         merged.about = value as { title: string; text: string }[];
       }
     } else if (typeof value === "string" && value.trim().length > 0) {
-      // String fields — length-capped on the admin side.
+      // String fields, length-capped on the admin side.
       (merged as Record<string, unknown>)[key] = value;
     }
   }
@@ -158,7 +158,7 @@ export function parseSiteContent(raw: unknown): SiteContent {
 
 /**
  * Business colors are stored as hex (#rrggbb, editable in the admin).
- * Passed straight through to inline CSS variables — the regex guard keeps
+ * Passed straight through to inline CSS variables, the regex guard keeps
  * malformed values from ever reaching the DOM.
  */
 function oklchOrHexToCss(value: string): string {

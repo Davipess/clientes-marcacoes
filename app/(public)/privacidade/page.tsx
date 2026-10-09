@@ -41,21 +41,21 @@ export default async function PrivacidadePage() {
           <p className="mt-1">Ao efetuar uma marcação recolhemos:</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
-              <strong className="text-foreground">Nome</strong> — para identificar
+              <strong className="text-foreground">Nome</strong>, para identificar
               a sua marcação no dia da visita;
             </li>
             <li>
-              <strong className="text-foreground">Número de telefone</strong> —
+              <strong className="text-foreground">Número de telefone</strong> ,
               para gerir e confirmar a sua marcação. É o único identificador do
               sistema: não usamos contas, palavras-passe nem emails;
             </li>
             <li>
-              <strong className="text-foreground">Notas</strong> — apenas se as
+              <strong className="text-foreground">Notas</strong>, apenas se as
               escrever você mesmo (ex.: alergias, preferências);
             </li>
             <li>
               <strong className="text-foreground">Histórico de marcações</strong>{" "}
-              — datas e serviços realizados.
+             , datas e serviços realizados.
             </li>
           </ul>
           <p className="mt-2">
@@ -73,25 +73,25 @@ export default async function PrivacidadePage() {
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
               <strong className="text-foreground">Gerir a sua marcação</strong>{" "}
-              (criar, confirmar, alterar, cancelar) — base legal: execução de
+              (criar, confirmar, alterar, cancelar), base legal: execução de
               contrato (art. .º 6.º/1/b RGPD);
             </li>
             <li>
               <strong className="text-foreground">Prevenir abusos</strong>{" "}
               (limites de marcações por número de telefone e registo de faltas
-              de comparecimento) — base legal: interesse legítimo na proteção
+              de comparecimento), base legal: interesse legítimo na proteção
               do negócio (art. 6.º/1/f RGPD). Este tratamento não envolve
               decisões individuais automatizadas com efeitos jurídicos: qualquer
               bloqueio é sempre decidido por uma pessoa;
             </li>
             <li>
               <strong className="text-foreground">Cumprir obrigações legais</strong>{" "}
-              (ex.: faturação, se aplicável) — base legal: obrigação legal
+              (ex.: faturação, se aplicável), base legal: obrigação legal
               (art. 6.º/1/c RGPD);
             </li>
             <li>
               <strong className="text-foreground">Novidades e promoções</strong>{" "}
-              — apenas se marcar essa opção, e pode retirar o consentimento
+             , apenas se marcar essa opção, e pode retirar o consentimento
               quando quiser (art. 6.º/1/a RGPD).
             </li>
           </ul>
@@ -102,29 +102,29 @@ export default async function PrivacidadePage() {
             4. Durante quanto tempo guardamos os dados
           </h2>
           <p className="mt-1">
-            Aplicamos um calendário rigoroso de eliminação — em 1 mês, uma
+            Aplicamos um calendário rigoroso de eliminação, em 1 mês, uma
             marcação não deixa nenhum traço:
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
               <strong className="text-foreground">Marcação fechada pelo salão</strong>{" "}
-              (concluída, falta registada ou cancelada) — o seu nome e telefone
+              (concluída, falta registada ou cancelada), o seu nome e telefone
               são <strong>apagados de imediato</strong>, se não tiver outras
               marcações futuras;
             </li>
             <li>
-              <strong className="text-foreground">Marcação não fechada</strong> —
+              <strong className="text-foreground">Marcação não fechada</strong> ,
               se o salão não atualizar o estado, os seus dados são apagados de
               qualquer forma <strong>7 dias após a data da marcação</strong>;
             </li>
             <li>
-              <strong className="text-foreground">1 mês depois</strong> — o
+              <strong className="text-foreground">1 mês depois</strong>, o
               histórico da marcação (serviços e datas) é{" "}
               <strong>eliminado por completo</strong>. Não resta nenhum traço
               que possa ser ligado a si;
             </li>
             <li>
-              <strong className="text-foreground">Contador de faltas</strong> — um
+              <strong className="text-foreground">Contador de faltas</strong>, um
               número associado a um código irreversível do seu telefone
               (pseudónimo), usado apenas para proteção contra abusos. Não
               permite recuperar o número nem contactar ninguém, e pode ser
@@ -142,7 +142,7 @@ export default async function PrivacidadePage() {
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
               Os números de telefone são guardados <strong>encriptados</strong>{" "}
-              (AES-256) — quem aceder à base de dados não consegue lê-los sem a
+              (AES-256), quem aceder à base de dados não consegue lê-los sem a
               chave da aplicação;
             </li>
             <li>
@@ -187,7 +187,7 @@ export default async function PrivacidadePage() {
             <li>retificar dados incorretos;</li>
             <li>
               solicitar a <strong>eliminação</strong> do seu número de telefone
-              e dados associados — o pedido é executado de forma definitiva
+              e dados associados, o pedido é executado de forma definitiva
               (anonimização irreversível), mantendo-se apenas um registo
               anónimo das marcações passadas, sem qualquer ligação a si;
             </li>

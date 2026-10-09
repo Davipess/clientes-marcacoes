@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     return Response.json({ error: result.message, code: result.code }, { status });
   }
 
-  // Phase 7: confirmation notification queued (delivery channel pending —
+  // Phase 7: confirmation notification queued (delivery channel pending ,
   // see lib/notifications.ts). Only the phone hash is logged, never the raw number.
   await queueNotification({
     businessId: business.id,

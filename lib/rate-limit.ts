@@ -22,7 +22,7 @@ export function mutationLimit(
 /**
  * Client IP for rate limiting. Priority: platform-set headers first
  * (trusted), then the LAST entry of X-Forwarded-For (appended by the
- * proxy — earlier entries are client-controlled and spoofable).
+ * proxy, earlier entries are client-controlled and spoofable).
  */
 export function clientIpFrom(request: Request): string {
   const nf = request.headers.get("x-nf-client-connection-ip"); // Netlify

@@ -43,7 +43,7 @@ export async function earnPoints(
 }
 
 /**
- * Redeem points for a reward — creates a voucher the client can use later.
+ * Redeem points for a reward, creates a voucher the client can use later.
  */
 export async function redeemReward(
   businessId: string,
@@ -88,7 +88,7 @@ export async function redeemReward(
 }
 
 /**
- * Use a voucher — client marks it as used in front of the owner.
+ * Use a voucher, client marks it as used in front of the owner.
  */
 export async function useVoucher(
   businessId: string,

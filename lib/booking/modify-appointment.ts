@@ -20,7 +20,7 @@ const ACTIVE_STATUSES = ["PENDING", "CONFIRMED"] as const;
 /**
  * Cancels an appointment. When `byClient` is true the cancellation policy
  * window is enforced; admins/staff can always cancel.
- * `businessId` scopes the lookup — required for all admin/staff callers.
+ * `businessId` scopes the lookup, required for all admin/staff callers.
  */
 export async function cancelAppointment(
   appointmentId: string,

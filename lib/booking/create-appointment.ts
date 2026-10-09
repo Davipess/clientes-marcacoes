@@ -119,7 +119,7 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
         const bufferMs = settings.bufferMinutes * 60_000;
         const day = dayPartsInTz(input.startAt, tz);
 
-        // ── Abuse prevention (Phase 14) — phone is the identifier ──
+        // ── Abuse prevention (Phase 14), phone is the identifier ──
         const phoneHash = piiLookupHash(normalizePhone(input.client.phone));
         const existingClient = await tx.client.findUnique({
           where: { businessId_phoneHash: { businessId: business.id, phoneHash } },
@@ -373,7 +373,7 @@ async function createAppointmentOnce(input: CreateBookingInput): Promise<OnceRes
         if (!appt) return;
         return sendPushToBusiness(input.businessId, {
           title: "Nova marcação",
-          body: `${appt.client.name} — ${appt.items.map((i) => i.serviceName).join(" + ")} — ${appt.startAt.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+          body: `${appt.client.name}, ${appt.items.map((i) => i.serviceName).join(" + ")}, ${appt.startAt.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}`,
           url: "/admin/agenda",
           tag: "new-booking",
         });

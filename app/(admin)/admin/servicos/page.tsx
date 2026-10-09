@@ -4,7 +4,7 @@ import { getAuthUser } from "@/lib/auth";
 import { ServiceManager } from "@/components/admin/service-manager";
 import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Serviços — Administração" };
+export const metadata: Metadata = { title: "Serviços, Administração" };
 
 export default async function AdminServicosPage() {
   const user = await getAuthUser();

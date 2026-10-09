@@ -5,7 +5,7 @@ import { getAuthUser } from "@/lib/auth";
 import { RewardForm } from "@/components/admin/reward-form";
 import { RewardList } from "@/components/admin/reward-list";
 
-export const metadata: Metadata = { title: "Fidelização — Administração" };
+export const metadata: Metadata = { title: "Fidelização, Administração" };
 
 export default async function FidelizacaoPage() {
   const user = await getAuthUser();

@@ -8,7 +8,7 @@
 [build.environment]
   NODE_VERSION = "22"
 
-# Edge Functions — rate limiting for public API endpoints
+# Edge Functions, rate limiting for public API endpoints
 [[edge_functions]]
   path = "/api/loyalty"
   function = "rate-limit"
@@ -31,4 +31,4 @@
 
 # Nota: as migrações da base de dados NÃO correm no deploy automático.
 # Aplicar com `npx prisma migrate deploy` (local ou CI) antes de promover
-# tráfego — ver docs/DEPLOY.md.
+# tráfego, ver docs/DEPLOY.md.

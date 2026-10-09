@@ -39,13 +39,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
     title: {
-      default: `${name} — Marcações Online`,
-      template: `%s — ${name}`,
+      default: `${name}, Marcações Online`,
+      template: `%s, ${name}`,
     },
     description,
     icons: business?.logoUrl ? [{ rel: "icon", url: business.logoUrl }] : undefined,
     openGraph: {
-      title: `${name} — Marcações Online`,
+      title: `${name}, Marcações Online`,
       description,
       locale: "pt_PT",
       type: "website",

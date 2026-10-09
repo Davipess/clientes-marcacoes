@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         : a.status === "CANCELLED"
           ? "Marcação cancelada"
           : "Marcação atualizada",
-    body: `${a.client.name} — ${a.items.map((i) => i.serviceName).join(" + ")} — ${a.startAt.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+    body: `${a.client.name}, ${a.items.map((i) => i.serviceName).join(" + ")}, ${a.startAt.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}`,
     url: "/admin/agenda",
     read: lastReadAt ? a.createdAt <= lastReadAt : false,
     createdAt: a.createdAt.toISOString(),

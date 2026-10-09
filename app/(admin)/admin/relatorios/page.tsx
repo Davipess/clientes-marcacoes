@@ -5,7 +5,7 @@ import { getAuthUser } from "@/lib/auth";
 import { nowZoned, zonedToUtc } from "@/lib/booking/time";
 import { formatEuros } from "@/lib/format";
 
-export const metadata: Metadata = { title: "Relatórios — Administração" };
+export const metadata: Metadata = { title: "Relatórios, Administração" };
 
 export default async function RelatoriosPage({
   searchParams,

@@ -265,7 +265,7 @@ export function SettingsForm({
           </Button>
           {brandSaved && (
             <span className="animate-fade-in text-xs text-green-700">
-              Guardado ✓ — visível no site público
+              Guardado ✓, visível no site público
             </span>
           )}
         </div>
@@ -449,7 +449,7 @@ export function SettingsForm({
         <h2 className="font-heading text-lg font-semibold">Prevenção de abusos</h2>
         <p className="text-xs text-muted-foreground">
           Limites por número de telefone. Quem atinge o limite de faltas fica
-          com um aviso no painel — o bloqueio é sempre manual, nunca automático.
+          com um aviso no painel, o bloqueio é sempre manual, nunca automático.
         </p>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -475,7 +475,7 @@ export function SettingsForm({
         </div>
         <p className="text-xs text-muted-foreground">
           Após o prazo de apagar contacto, o nome e o número são removidos
-          automaticamente se não houver marcações futuras — fica apenas um
+          automaticamente se não houver marcações futuras, fica apenas um
           histórico anónimo. Os limites anti-abuso continuam a funcionar.
         </p>
       </section>
@@ -496,7 +496,7 @@ export function SettingsForm({
         </Button>
         {saved && (
           <span className="animate-fade-in text-sm text-green-700">
-            Guardado ✓ — as alterações já estão visíveis no site.
+            Guardado ✓, as alterações já estão visíveis no site.
           </span>
         )}
         {error && <span className="text-sm text-destructive">{error}</span>}
@@ -552,7 +552,7 @@ function LogoutAllButton() {
         {pending
           ? "A terminar sessões..."
           : confirm
-            ? "Confirmar — terminar todas as sessões?"
+            ? "Confirmar, terminar todas as sessões?"
             : "Terminar todas as sessões"}
       </Button>
       {msg && <p className="mt-2 text-sm text-muted-foreground">{msg}</p>}
@@ -583,7 +583,7 @@ function AddStaffForm({ onCreated }: { onCreated: () => void }) {
         setErr(json.error ?? "Erro ao criar a técnica.");
         return;
       }
-      setMsg(`Conta criada para ${String(data.displayName)} — já pode entrar em /entrar.`);
+      setMsg(`Conta criada para ${String(data.displayName)}, já pode entrar em /entrar.`);
       form.reset();
       onCreated();
     } catch {

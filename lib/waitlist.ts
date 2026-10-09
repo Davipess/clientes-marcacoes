@@ -62,7 +62,7 @@ export async function notifyWaitlist(
     // Push notification to business owner
     await sendPushToBusiness(businessId, {
       title: "Vaga disponível",
-      body: `${entry.clientName} — ${entry.service.name} — ${date.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "numeric" })}`,
+      body: `${entry.clientName}, ${entry.service.name}, ${date.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "numeric" })}`,
       url: "/admin/agenda",
       tag: `waitlist-${entry.id}`,
     }).catch(() => {});

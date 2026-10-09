@@ -49,3 +49,7 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+
+# AI editor / agent artifacts
+AGENTS.md
+CLAUDE.md

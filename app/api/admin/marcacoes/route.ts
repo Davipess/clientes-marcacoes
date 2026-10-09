@@ -112,7 +112,7 @@ export async function PUT(request: Request) {
       const serviceName = appt.items[0]?.serviceName ?? "Marcação";
       sendPushToClientByPhoneHash(guard.businessId, client.phoneHash, {
         title: "Marcação reagendada",
-        body: `${serviceName} — Nova data: ${newDate} às ${newTime}. Se não lhe convier, contacte o salão.`,
+        body: `${serviceName}, Nova data: ${newDate} às ${newTime}. Se não lhe convier, contacte o salão.`,
         url: "/pontos",
       }).catch(() => {});
     }

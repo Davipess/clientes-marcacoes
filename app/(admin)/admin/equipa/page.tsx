@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 import { TeamManager } from "@/components/admin/team-manager";
 
-export const metadata: Metadata = { title: "Equipa — Administração" };
+export const metadata: Metadata = { title: "Equipa, Administração" };
 
 export default async function AdminEquipaPage() {
   const user = await getAuthUser();

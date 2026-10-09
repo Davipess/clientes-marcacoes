@@ -5,7 +5,7 @@ import { getAuthUser } from "@/lib/auth";
 import { decryptPiiSafe } from "@/lib/crypto";
 import { AgendaView } from "@/components/admin/agenda-view";
 
-export const metadata: Metadata = { title: "Agenda — Administração" };
+export const metadata: Metadata = { title: "Agenda, Administração" };
 
 export default async function AdminAgendaPage({
   searchParams,

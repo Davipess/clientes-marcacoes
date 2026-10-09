@@ -47,7 +47,7 @@ export function SiteContentEditor({ initial }: { initial: SiteContent }) {
     <section className="mt-8 space-y-4 rounded-2xl border border-border/70 bg-card p-5">
       <h2 className="font-heading text-lg font-semibold">Conteúdo do site</h2>
       <p className="text-xs text-muted-foreground">
-        Os textos da página inicial — torne o site seu sem tocar em código.
+        Os textos da página inicial, torne o site seu sem tocar em código.
         As alterações são imediatas no site público.
       </p>
 
@@ -108,7 +108,7 @@ export function SiteContentEditor({ initial }: { initial: SiteContent }) {
         <div key={i} className="grid gap-2 rounded-xl bg-muted/50 p-3 sm:grid-cols-[200px_1fr]">
           <div>
             <Label htmlFor={`sc-about-t-${i}`} className="text-xs">
-              Item {i + 1} — título
+              Item {i + 1}, título
             </Label>
             <Input
               id={`sc-about-t-${i}`}
@@ -124,7 +124,7 @@ export function SiteContentEditor({ initial }: { initial: SiteContent }) {
           </div>
           <div>
             <Label htmlFor={`sc-about-x-${i}`} className="text-xs">
-              Item {i + 1} — texto
+              Item {i + 1}, texto
             </Label>
             <Textarea
               id={`sc-about-x-${i}`}
@@ -176,7 +176,7 @@ export function SiteContentEditor({ initial }: { initial: SiteContent }) {
       </Button>
       {saved && (
         <span className="animate-fade-in ml-2 text-xs text-green-700">
-          Guardado ✓ — já visível no site
+          Guardado ✓, já visível no site
         </span>
       )}
     </section>

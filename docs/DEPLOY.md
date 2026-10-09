@@ -1,102 +1,68 @@
-# Deploy — Netlify + Neon
+# 🚀 Production Deployment Guide: Netlify & Neon PostgreSQL
 
-## Pré-requisitos (contas gratuitas)
-- Conta Netlify (plano free — permite uso comercial)
-- Base de dados Neon já criada (a de desenvolvimento serve para começar;
-  para produção crie um projeto/branch separado no Neon — também gratuito)
+## 📋 Prerequisites
+* **Netlify Account:** Free tier supports commercial usage and Next.js App Router serverless runtime.
+* **Neon PostgreSQL Account:** Serverless PostgreSQL with connection pooling.
+* **Git Repository:** Connected to your GitHub remote.
 
-## Passos
+---
 
-1. **Repositório**: faça push do repo para o GitHub
-   (`git remote add origin ... && git push -u origin main`).
+## 🛠️ Step-by-Step Deployment
 
-2. **Netlify**: "Add new site" → "Import an existing project" → escolha o
-   repo. O `netlify.toml` já está configurado (build + plugin Next.js).
-
-3. **Variáveis de ambiente** (Netlify → Site settings → Environment variables):
-
-   | Variável | Valor |
-   |---|---|
-   | `DATABASE_URL` | connection string do utilizador **app_user** (privilégios CRUD, sem DDL — ver "Dois utilizadores" abaixo) |
-| `MIGRATE_DATABASE_URL` | connection string do **dono** da BD (neondb_owner) — usada apenas pelo CLI de migrações |
-   | `APP_ENCRYPTION_KEY` | chave base64 de 32 bytes (gerar: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`) |
-   | `NEXT_PUBLIC_APP_URL` | URL final do site (ex.: `https://salaoexemplo.netlify.app`) |
-   | `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | (opcional) para a seed criar o admin |
-   | `STAFF_*` | (opcional) para a seed criar staff |
-
-   ⚠️ Nunca comitar o `.env` real. A `APP_ENCRYPTION_KEY` de produção deve
-   ser **diferente** da de desenvolvimento? Não — se for diferente, os dados
-   encriptados pela chave antiga ficam ilegíveis. Use a mesma chave se quiser
-   manter os dados, ou comece a base de produção vazia com chave nova.
-
-4. **Base de dados de produção**:
+### 1. Database Provisioning (Neon)
+1. Create a Neon project with pooling enabled.
+2. The platform operates on a **Least-Privilege Database Principle** with two users:
+   * **`app_user` (Runtime):** Granted only standard CRUD permissions (`SELECT`, `INSERT`, `UPDATE`, `DELETE`). It possesses **zero DDL privileges**, ensuring that even in the unlikely event of an application exploit, the schema cannot be dropped or altered.
+   * **`neondb_owner` (Migrations):** Used strictly by Prisma CLI during schema deployments.
+3. Generate the runtime user URL:
    ```bash
-   # apontar DATABASE_URL para o Neon de produção e correr:
-   npx prisma migrate deploy
-   npx tsx prisma/seed.ts   # cria o negócio + admin (idempotente)
+   NODE_OPTIONS="--conditions=react-server" npx tsx scripts/setup-db-user.ts
    ```
-   Estratégia: `migrate deploy` aplica apenas migrações pendentes, por ordem,
-   sem perda de dados. Nunca usar `migrate reset` / `db push` em produção.
-   Antes de cada release com migrações novas, correr `migrate deploy` primeiro
-   (as migrações são aditivas e retro-compatíveis por design).
 
-5. **Domínio**: Netlify → Domain management → adicionar domínio próprio
-   (grátis, só paga o domínio se quiser um .pt — o .netlify.app é gratuito).
+### 2. Environment Variables Configuration (Netlify)
+Navigate to **Site settings → Environment variables** in your Netlify dashboard and define:
 
-## Verificação pós-deploy
-- [ ] Homepage carrega e mostra o nome/horário do salão
-- [ ] `/marcar` completa uma marcação de teste (verificar no admin)
-- [ ] Login em `/entrar` funciona
-- [ ] `/sitemap.xml` e `/robots.txt` acessíveis
-- [ ] Marcação de teste apagada no painel admin
+| Variable | Description | Source |
+|---|---|---|
+| `DATABASE_URL` | Runtime pooled connection string | Neon `app_user` URL (with `?sslmode=require`) |
+| `MIGRATE_DATABASE_URL` | DDL connection string for migrations | Neon owner connection string |
+| `APP_ENCRYPTION_KEY` | 32-byte Base64 AES-256-GCM encryption key | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
+| `NEXT_PUBLIC_APP_URL` | Canonical production URL | `https://your-domain.netlify.app` |
+| `VAPID_PUBLIC_KEY` | Web push public key | `npx web-push generate-vapid-keys` |
+| `VAPID_PRIVATE_KEY` | Web push private key | Generated with command above |
+| `CRON_SECRET` | Secret token for retention & reminder endpoints | Cryptographically random string |
 
-## Limitações conhecidas (100% gratuito)
-- Notificações automáticas ao cliente (confirmação/lembrete): infraestrutura
-  pronta (`lib/notifications.ts`) mas sem canal de entrega ativo — SMS custa
-  dinheiro; quando houver orçamento, ligar WhatsApp Business Cloud API.
-- Recuperação de palavra-passe: o link é registado no log do servidor
-  (dev). Em produção, configurar Resend (free tier: 100 emails/dia) e ligar
-  em `app/api/auth/forgot-password/route.ts` — apenas para staff/admin.
+> ⚠️ **Security Rule:** Never commit the `.env` file containing actual keys or production connection strings.
 
-## Segurança em produção (notas)
-
-- **Rate limiting em memória**: funciona numa única instância; se escalar
-  horizontalmente, migrar para Upstash Redis (free tier) — ver lib/rate-limit.ts.
-- **MFA para admin**: campo 	woFactorSecretEnc já reservado no schema; TOTP é o
-  próximo passo no roadmap de segurança.
-- **Backups**: ativar backups automáticos no Neon (plano free inclui histórico
-  de 24h; point-in-time restore disponível). Exportar pg_dump semanal para
-  redundância externa.
-- **Dependências**: correr 
-pm audit antes de cada atualização; manter
-  Next.js na versão mais recente (patch de CVE críticos históricos).
-
-## Dois utilizadores de base de dados (menor privilégio)
-
-A aplicação corre com pp_user (SELECT/INSERT/UPDATE/DELETE — sem DDL: mesmo
-comprometida, não consegue apagar nem alterar tabelas). As migrações correm com
-o utilizador owner via MIGRATE_DATABASE_URL.
-
-Criar o pp_user numa instância nova:
-
-`powershell
-$env:NODE_OPTIONS="--conditions=react-server"
-npx tsx scripts/setup-db-user.ts   # escreve a URL em db-user-url.txt
-`"
-
-Copiar a URL gerada para DATABASE_URL (Netlify + .env local).
-
-## Dois utilizadores de base de dados (menor privilégio)
-
-A aplicação corre com `app_user` (SELECT/INSERT/UPDATE/DELETE — **sem DDL**:
-mesmo comprometida, não consegue apagar nem alterar tabelas). As migrações
-correm com o utilizador owner via `MIGRATE_DATABASE_URL`.
-
-Criar o `app_user` numa instância nova:
-
-```powershell
-$env:NODE_OPTIONS="--conditions=react-server"
-npx tsx scripts/setup-db-user.ts   # escreve a URL em db-user-url.txt
+### 3. Production Migration & Seed
+Apply additive migrations without data loss:
+```bash
+npx prisma migrate deploy
+npx tsx prisma/seed.ts
 ```
 
-Copiar a URL gerada para `DATABASE_URL` (Netlify + `.env` local).
+### 4. Post-Deployment Verification Checklist
+- [ ] Homepage loads and reflects salon branding, services, and working hours.
+- [ ] Completed an end-to-end booking flow at `/marcar`.
+- [ ] Administrative login verified at `/entrar`.
+- [ ] Automated push notification dispatched upon booking completion.
+- [ ] Cleaned up the test booking in the admin schedule dashboard.
+
+---
+
+<details>
+<summary><b>🇵🇹 Guia de Deploy em Português</b></summary>
+
+### Deploy: Netlify + Neon
+
+#### Pré-requisitos
+* Conta Netlify (plano gratuito permite uso comercial)
+* Base de dados Neon já criada com connection pooling
+
+#### Passos Principais
+1. **Repositório:** Fazer push do código para o GitHub.
+2. **Netlify:** "Add new site" → "Import an existing project" → selecionar o repositório. O ficheiro `netlify.toml` já está configurado.
+3. **Variáveis de ambiente:** Configurar `DATABASE_URL` (utilizador com menores privilégios `app_user`), `APP_ENCRYPTION_KEY` (chave AES de 32 bytes) e chaves VAPID.
+4. **Migrações:** Executar `npx prisma migrate deploy` e `npx tsx prisma/seed.ts`.
+5. **Verificação:** Testar o fluxo completo de agendamento e o painel de administração em `/admin`.
+</details>

@@ -14,7 +14,7 @@ export default async function ConfiguracaoPage() {
     where: { role: Role.ADMIN },
   });
   if (adminExiste) {
-    // Bootstrap already done — this page must never expose account creation.
+    // Bootstrap already done, this page must never expose account creation.
     redirect("/entrar");
   }
 

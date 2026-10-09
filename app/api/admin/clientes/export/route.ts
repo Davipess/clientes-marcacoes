@@ -10,7 +10,7 @@ function csvEscape(value: string): string {
   return `"${safe}"`;
 }
 
-// POST /api/admin/clientes/export — request an export, returns a confirmation token
+// POST /api/admin/clientes/export, request an export, returns a confirmation token
 export async function POST(request: Request) {
   const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   return Response.json({ token: rawToken, expiresInSeconds: 300 });
 }
 
-// GET /api/admin/clientes/export?token=xxx — download the CSV with a valid token
+// GET /api/admin/clientes/export?token=xxx, download the CSV with a valid token
 export async function GET(request: Request) {
   const guard = await requireAdmin(request);
   const ip = clientIpFrom(request);

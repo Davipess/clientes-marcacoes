@@ -1,4 +1,4 @@
-// Online booking platform — multi-business-ready schema
+// Online booking platform, multi-business-ready schema
 // Single business for now; every business-scoped table carries businessId.
 
 generator client {
@@ -371,7 +371,7 @@ model Review {
   comment       String?
   createdAt     DateTime    @default(now())
 
-  @@map("reviews") // future phase — model reserved now
+  @@map("reviews") // future phase, model reserved now
 }
 
 // Uploaded images stored as bytes (serverless-friendly, no external storage).

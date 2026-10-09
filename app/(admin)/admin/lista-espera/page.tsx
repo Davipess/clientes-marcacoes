@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "Lista de Espera — Administração" };
+export const metadata: Metadata = { title: "Lista de Espera, Administração" };
 
 export default async function ListaEsperaPage() {
   const user = await getAuthUser();

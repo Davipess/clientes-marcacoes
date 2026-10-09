@@ -9,7 +9,7 @@ import { SiteContentEditor } from "@/components/admin/site-content-editor";
 import { PushSubscribeButton } from "@/components/admin/push-subscribe-button";
 import { parseSiteContent } from "@/lib/public-data";
 
-export const metadata: Metadata = { title: "Definições — Administração" };
+export const metadata: Metadata = { title: "Definições, Administração" };
 
 export default async function AdminDefinicoesPage() {
   const user = await getAuthUser();
@@ -48,7 +48,7 @@ export default async function AdminDefinicoesPage() {
     <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="font-heading text-2xl font-semibold">Definições</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Tudo o que o site público mostra vem daqui — nada está fixo no código.
+        Tudo o que o site público mostra vem daqui, nada está fixo no código.
       </p>
       <SettingsForm
         business={{

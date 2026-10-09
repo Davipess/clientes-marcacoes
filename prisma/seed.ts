@@ -12,7 +12,7 @@ async function main() {
     business = await prisma.business.create({
       data: {
         slug: "salao-exemplo",
-        name: "Lenia Ferreira",
+        name: "Salão Exemplo",
         address: "Rua Exemplo, 123, Lisboa",
         phone: "+351 900 000 000",
         email: "geral@salaoexemplo.pt",

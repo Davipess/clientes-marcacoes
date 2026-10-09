@@ -42,7 +42,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Token format sanity check (base64url, ~43 chars for 32 bytes).
-  // Catches obviously forged/empty cookies. Not a security boundary —
+  // Catches obviously forged/empty cookies. Not a security boundary ,
   // getAuthUser() does the real DB lookup.
   if (token.length < 20 || /[^a-zA-Z0-9_-]/.test(token)) {
     if (isApiPath(pathname)) {
